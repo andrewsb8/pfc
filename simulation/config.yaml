@@ -1,0 +1,9 @@
+D: 1
+K: 1
+qn: 1.5
+u4: 120.0
+u3: -40.0
+tau: 20.0
+
+mesh_file: "mesh.geo"
+log_file: "pfc.log"
