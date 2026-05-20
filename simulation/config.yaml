@@ -7,3 +7,5 @@ tau: 20.0
 
 mesh_file: "mesh.geo"
 log_file: "pfc.log"
+output_file: "pfc.h5"
+output_interval: 1

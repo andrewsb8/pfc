@@ -1,13 +1,16 @@
+## Phase Field Crystal Simulation
+
 The directory contains scripts and configuration files for conducting Phase Field Crystal simulations on the surface of a sphere.
 
-Dependencies:
-- [FiPy](https://pages.nist.gov/fipy/en/latest/index.html)
-- [gmsh](https://gmsh.info/)
+### Getting Started
 
-In a new venv/conda environment, run:
-
-`$ pip install -r requirements.txt`
-
-To run a simulation, simply run:
+After installing dependencies and setting up your python environment (see top level README), run a simulation:
 
 `$ python simulate.py`
+
+### Configuration Files
+
+- mesh.geo: Contains information for constructing the surface, a sphere in this case
+- config.yaml: Configuration variables with (TODO) descriptive comments
+  - Values of Coefficients for the PFC partial differential equation
+  - Details for log and trajectory files
