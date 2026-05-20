@@ -3,6 +3,8 @@ import logging
 import os
 import sys
 
+import yaml
+
 
 class Log(object):
     def __init__(self):
@@ -30,10 +32,7 @@ class Log(object):
         log.debug("Warnings and Errors:\n")
         return log
 
-    def _log_args(self, log, arg_list, protein_sequence=None):
-        log.debug("\n\nList of Parameters:")
-        if protein_sequence is not None:
-            log.debug("Protein Sequence : " + protein_sequence)
-        for k in arg_list:
-            log.debug(k + " : " + str(arg_list[k]))
-        log.debug("\n\n")
+    def _log_args(self, log, params):
+        yaml_str = yaml.safe_dump(params, sort_keys=False)
+        log.debug("------ Parameters ------")
+        log.debug("%s", yaml_str)

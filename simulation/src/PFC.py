@@ -19,6 +19,7 @@ class PFC_Sim(object):
         self.config = self._parse_config(config_file)
         log_obj = Log()
         self.log = log_obj._create_log(self.config["log_file"])
+        log_obj._log_args(self.log, self.config)
         self._generate_mesh()
 
     def _parse_config(self, config_file):
