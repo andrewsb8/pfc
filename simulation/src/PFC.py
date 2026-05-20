@@ -46,15 +46,7 @@ class PFC_Sim(object):
         ) + DiffusionTerm(coeff=(1.0, 1.0, c["D"] * c["K"]))
 
     def _simulate(self):
-        elapsed = 0
-        dexp = -7
-        # set the total integration time "duration" and evolve the dynamics
-        duration = 0.002
-        while elapsed < duration:
-            print(elapsed)
+        for i in range(self.config["nsteps"]):
             print(self.phi)
             print(len(self.phi))
-            dt = min(0.005, math.exp(dexp))
-            elapsed += dt
-            dexp += 0.005
-            self.eq.solve(self.phi, dt=dt)
+            self.eq.solve(self.phi, dt=self.config["dt"])

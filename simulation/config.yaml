@@ -1,3 +1,4 @@
+# Variables and coefficients
 D: 1
 K: 1
 qn: 1.5
@@ -5,7 +6,14 @@ u4: 120.0
 u3: -40.0
 tau: 20.0
 
+# Simulation parameters
+dt: 0.005
+nsteps: 10
+
+# inputs
 mesh_file: "mesh.geo"
+
+# outputs
 log_file: "pfc.log"
 output_file: "pfc.h5"
 output_interval: 1
