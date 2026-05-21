@@ -56,5 +56,6 @@ class PFC_Sim(object):
         self.traj_writer._write_data(0, self.phi)
         for i in range(1, self.config["nsteps"] + 1):
             self.eq.solve(self.phi, dt=self.config["dt"])
-            self.traj_writer._write_data(i, self.phi)
+            if i % self.config["trajectory_write_interval"] == 0:
+                self.traj_writer._write_data(i, self.phi)
         self.traj_writer.traj_file.close()
