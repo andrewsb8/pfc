@@ -1,8 +1,6 @@
 import datetime
-import math
+import json
 
-import numpy as np
-import yaml
 from fipy import (
     CellVariable,
     DiffusionTerm,
@@ -10,26 +8,33 @@ from fipy import (
     Gmsh2DIn3DSpace,
     TransientTerm,
 )
+from src.fileIO import FileIO
 from src.logging import Log
 from src.trajectory import TrajectoryWriter
 
 # from fipy.tools import dump # may want when generating output time steps
 
 
-class PFC_Sim(object):
+class PFC_Sim(FileIO):
     def __init__(self, config_file):
         time = datetime.datetime.now()
-        self.config = self._parse_config(config_file)
+        self.config = self._parse_yaml(config_file)
         log_obj = Log()
         self.log = log_obj._create_log(self.config["log_file"], time)
         log_obj._log_args(self.log, self.config)
-        self._generate_mesh()
-        self.traj_writer = TrajectoryWriter(self.config, len(self.phi))
-        self._generate_eq_motion()
 
-    def _parse_config(self, config_file):
-        with open(config_file, "r") as file:
-            return yaml.safe_load(file)
+        self.log.debug("------ Mesh ------")
+        mesh_content = self._return_file_contents_as_string(self.config["mesh_file"])
+        self.log.debug(mesh_content)
+        self._generate_mesh()
+
+        self.traj_writer = TrajectoryWriter(self.config)
+        self.traj_writer._create_dataset(self.config, len(self.phi))
+        self.traj_writer._store_attribute("time", str(time))
+        self.traj_writer._store_attribute("parameters", json.dumps(self.config))
+        self.traj_writer._store_attribute("mesh", mesh_content)
+
+        self._generate_eq_motion()
 
     def _generate_mesh(self):
         mesh = Gmsh2DIn3DSpace(self.config["mesh_file"]).extrude(

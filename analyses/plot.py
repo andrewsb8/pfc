@@ -1,5 +1,13 @@
+import json
+import sys
+
+import h5py
 import matplotlib.pyplot as plt
 import numpy as np
+
+infile = sys.argv[1]
+data = h5py.File(infile, "r")
+phi = data["trajectory"][-1]
 
 # NEED TO LOAD THE MESH AND FIELD VALUES TO USE THIS
 
