@@ -1,15 +1,25 @@
-import json
+# example script that prints final frame from an HDF5
+# file containing phase field crystal simulation
+
 import sys
 
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
+from fipy import (
+    CellVariable,
+    Gmsh2DIn3DSpace,
+)
+from numpy._core.strings import center
 
 infile = sys.argv[1]
 data = h5py.File(infile, "r")
-phi = data["trajectory"][-1]
+center_values = data["trajectory"][-1]
+mesh_str = data["trajectory"].attrs["mesh"]
 
-# NEED TO LOAD THE MESH AND FIELD VALUES TO USE THIS
+mesh = Gmsh2DIn3DSpace(mesh_str).extrude(extrudeFunc=lambda r: 1.1 * r)
+phi = CellVariable(name=r"$\phi$", mesh=mesh)
+phi.setValue(center_values)
 
 x3d, y3d, z3d = mesh.faceCenters
 valc = np.array(phi.arithmeticFaceValue)
