@@ -1,3 +1,4 @@
+import datetime
 import math
 
 import numpy as np
@@ -10,24 +11,27 @@ from fipy import (
     TransientTerm,
 )
 from src.logging import Log
+from src.trajectory import TrajectoryWriter
 
 # from fipy.tools import dump # may want when generating output time steps
 
 
 class PFC_Sim(object):
     def __init__(self, config_file):
+        time = datetime.datetime.now()
         self.config = self._parse_config(config_file)
         log_obj = Log()
-        self.log = log_obj._create_log(self.config["log_file"])
+        self.log = log_obj._create_log(self.config["log_file"], time)
         log_obj._log_args(self.log, self.config)
+        self.traj_writer = TrajectoryWriter(self.config)
         self._generate_mesh()
+        self._generate_eq_motion()
 
     def _parse_config(self, config_file):
         with open(config_file, "r") as file:
             return yaml.safe_load(file)
 
     def _generate_mesh(self):
-        c = self.config  # avoid rewriting self.config a ton in equations
         mesh = Gmsh2DIn3DSpace(self.config["mesh_file"]).extrude(
             extrudeFunc=lambda r: 1.1 * r
         )
@@ -38,6 +42,8 @@ class PFC_Sim(object):
         self.phi.setValue(GaussianNoiseVariable(mesh=mesh, mean=0, variance=0.04))
         self.PHI = self.phi.arithmeticFaceValue
 
+    def _generate_eq_motion(self):
+        c = self.config  # avoid rewriting self.config a ton in equations
         # define the conserved dynamics equation
         self.sourcey = (
             c["u4"] * 0.5 * self.PHI * self.PHI + c["u3"] * self.PHI + c["tau"]

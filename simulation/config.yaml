@@ -8,12 +8,12 @@ tau: 20.0
 
 # Simulation parameters
 dt: 0.005
-nsteps: 10
+nsteps: 1
 
 # inputs
 mesh_file: "mesh.geo"
 
 # outputs
 log_file: "pfc.log"
-output_file: "pfc.h5"
-output_interval: 1
+trajectory_file: "pfc.h5"
+trajectory_write_interval: 1 # in number of steps

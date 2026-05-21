@@ -10,7 +10,7 @@ class Log(object):
     def __init__(self):
         pass
 
-    def _create_log(self, log_file_name):
+    def _create_log(self, log_file_name, time):
         log = logging.getLogger(__name__)
         log.setLevel(logging.DEBUG)
         if os.path.isfile(log_file_name):
@@ -27,7 +27,7 @@ class Log(object):
         file_handler.setLevel(logging.DEBUG)
         log.addHandler(file_handler)
         log.addHandler(stderr_handler)
-        log.info("Execution Time : " + str(datetime.datetime.now()))
+        log.info("Execution Time : " + str(time))
         log.debug("Command line: python " + " ".join(sys.argv[0:]) + "\n\n")
         log.debug("Warnings and Errors:\n")
         return log
