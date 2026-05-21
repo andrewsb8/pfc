@@ -14,3 +14,9 @@ After installing dependencies and setting up your python environment (see top le
 - config.yaml: Configuration variables with (TODO) descriptive comments
   - Values of Coefficients for the PFC partial differential equation
   - Details for log and trajectory files
+
+### Output Files
+
+Simulations will output two files:
+- Log File: Parameters, warnings, errors, and progress information.
+- H5DF Trajectory File: Also contains parameters for redundancy and the time evolution of the field.
