@@ -5,11 +5,7 @@ class TrajectoryWriter(object):
     def __init__(self, config):
         self.traj_file = h5py.File(config["trajectory_file"], "w")
 
-    def _create_dataset(self, config, field_size):
-        dset_shape = (
-            int(config["nsteps"] / config["trajectory_write_interval"]) + 1,
-            field_size,
-        )
+    def _create_dataset(self, dset_shape):
         self.traj_file.traj = self.traj_file.create_dataset(
             "trajectory", shape=dset_shape, dtype="float16"
         )

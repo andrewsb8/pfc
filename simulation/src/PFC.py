@@ -29,10 +29,19 @@ class PFC_Sim(FileIO):
         self._generate_mesh()
 
         self.traj_writer = TrajectoryWriter(self.config)
-        self.traj_writer._create_dataset(self.config, len(self.phi))
+        dset_shape = (
+            int(self.config["nsteps"] / self.config["trajectory_write_interval"]) + 1,
+            len(self.phi),
+        )
+        self.traj_writer._create_dataset(dset_shape)
         self.traj_writer._store_attribute("time", str(time))
         self.traj_writer._store_attribute("parameters", json.dumps(self.config))
         self.traj_writer._store_attribute("mesh", mesh_content)
+
+        self.log.debug("------ Simulation details ------")
+        self.log.debug(f"Number of expected output frames: {dset_shape[0]}")
+        self.log.debug(f"Number of cells: {len(self.phi)}")
+        self.log.debug("")
 
         self._generate_eq_motion()
 
@@ -58,9 +67,11 @@ class PFC_Sim(FileIO):
         ) + DiffusionTerm(coeff=(1.0, 1.0, c["D"] * c["K"]))
 
     def _simulate(self):
+        self.log.debug("------ Simulation Progress ------")
         self.traj_writer._write_data(0, self.phi)
         for i in range(1, self.config["nsteps"] + 1):
             self.eq.solve(self.phi, dt=self.config["dt"])
             if i % self.config["trajectory_write_interval"] == 0:
                 self.traj_writer._write_data(i, self.phi)
+            self.log.debug(f"Step {i} complete.")
         self.traj_writer.traj_file.close()

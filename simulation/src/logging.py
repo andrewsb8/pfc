@@ -27,9 +27,8 @@ class Log(object):
         file_handler.setLevel(logging.DEBUG)
         log.addHandler(file_handler)
         log.addHandler(stderr_handler)
-        log.info("Execution Time : " + str(time))
-        log.debug("Command line: python " + " ".join(sys.argv[0:]) + "\n\n")
-        log.debug("Warnings and Errors:\n")
+        log.debug("Execution Time : " + str(time))
+        log.debug("Command line: python " + " ".join(sys.argv[0:]) + "\n")
         return log
 
     def _log_args(self, log, params):
