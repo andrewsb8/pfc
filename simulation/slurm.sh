@@ -10,7 +10,7 @@
 
 export PATH="/path/to/gmsh/bin:$PATH"
 
-. /path/to/miniconda3/etc/profile.d/conda.sh
+source /path/to/miniconda3/etc/profile.d/conda.sh
 conda activate pfc
 
 python3 simulate.py

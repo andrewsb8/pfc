@@ -14,7 +14,7 @@ module load cuda/12.6
 
 export PATH="/path/to/gmsh/bin:$PATH"
 
-. /path/to/miniconda3/etc/profile.d/conda.sh
+source /path/to/miniconda3/etc/profile.d/conda.sh
 conda activate pfc
 
 PIFY_SOLVERS=amgxpy python3 simulate.py
