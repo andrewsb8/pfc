@@ -73,5 +73,5 @@ class PFC_Sim(FileIO):
             self.eq.solve(self.phi, dt=self.config["dt"])
             if i % self.config["trajectory_write_interval"] == 0:
                 self.traj_writer._write_data(i, self.phi)
-            self.log.debug(f"Step {i} complete.")
+            self.log.info(f"Step {i} complete.")
         self.traj_writer.traj_file.close()
