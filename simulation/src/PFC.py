@@ -45,9 +45,51 @@ class PFC_Sim(FileIO):
         self._generate_eq_motion()
 
     def _configure_solver(self):
-        os.environ["FIPY_SOLVERS"] = self.config["solver"]
-        self.log.debug(f"Solver: {solvers.DefaultSolver}")
-        self.log.debug(f"Asymmetric Solver: {solvers.DefaultAsymmetricSolver}")
+        if os.environ.get("FIPY_SOLVERS") == "pyamgx":
+            from fipy.solvers.pyamgx.pyAMGXSolver import PyAMGXSolver
+
+            cfg_dict = {
+                "config_version": 2,
+                "determinism_flag": 1,
+                "exception_handling": 1,
+                "solver": {
+                    "print_grid_stats": 1,
+                    "store_res_history": 1,
+                    "solver": "GMRES",
+                    "print_solve_stats": 1,
+                    "obtain_timings": 1,
+                    "preconditioner": {
+                        "interpolator": "D2",
+                        "print_grid_stats": 1,
+                        "solver": "AMG",
+                        "smoother": "JACOBI_L1",
+                        "presweeps": 2,
+                        "selector": "PMIS",
+                        "coarsest_sweeps": 2,
+                        "coarse_solver": "NOSOLVER",
+                        "max_iters": 1,
+                        "interp_max_elements": 4,
+                        "min_coarse_rows": 2,
+                        "scope": "amg_solver",
+                        "max_levels": 24,
+                        "cycle": "V",
+                        "postsweeps": 2,
+                    },
+                    "max_iters": 100,
+                    "monitor_residual": 1,
+                    "gmres_n_restart": 10,
+                    "convergence": "RELATIVE_INI_CORE",
+                    "tolerance": 1e-06,
+                    "norm": "L2",
+                },
+            }
+
+            self.solver = PyAMGXSolver(cfg_dict)
+        else:
+            self.solver = None
+        self.log.debug(f"self.solver: {self.solver}")
+        self.log.debug(f"Default Solver: {solvers.DefaultSolver}")
+        self.log.debug(f"Default Asymmetric Solver: {solvers.DefaultAsymmetricSolver}")
 
     def _generate_mesh(self):
         mesh = Gmsh2DIn3DSpace(self.config["mesh_file"]).extrude(
@@ -71,7 +113,7 @@ class PFC_Sim(FileIO):
         self.log.debug("------ Simulation Progress ------")
         self.traj_writer._write_data(0, self.phi)
         for i in range(1, self.config["nsteps"] + 1):
-            self.eq.solve(self.phi, dt=self.config["dt"])
+            self.eq.solve(self.phi, dt=self.config["dt"], solver=self.solver)
             if i % self.config["trajectory_write_interval"] == 0:
                 self.traj_writer._write_data(i, self.phi)
             self.log.info(f"Step {i} complete.")

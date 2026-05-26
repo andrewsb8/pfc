@@ -16,4 +16,4 @@ export PATH="/path/to/gmsh/bin:$PATH"
 source /path/to/miniconda3/etc/profile.d/conda.sh
 conda activate pfc
 
-python3 simulate.py
+FIPY_SOLVERS=pyamgx python3 simulate.py
