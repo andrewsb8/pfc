@@ -13,7 +13,7 @@ module load CUDA
 
 export PATH="/path/to/gmsh/bin:$PATH"
 
-source /gpfs/gibbs/project/sweeney_alison/ba557/miniconda3/etc/profile.d/conda.sh
+source /path/to/miniconda3/etc/profile.d/conda.sh
 conda activate pfc
 
 python3 simulate.py
