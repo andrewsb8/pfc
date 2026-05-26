@@ -7,6 +7,7 @@ from fipy import (
     GaussianNoiseVariable,
     Gmsh2DIn3DSpace,
     TransientTerm,
+    solvers,
 )
 from src.fileIO import FileIO
 from src.logging import Log
@@ -22,6 +23,8 @@ class PFC_Sim(FileIO):
         log_obj = Log()
         self.log = log_obj._create_log(self.config["log_file"], time)
         log_obj._log_args(self.log, self.config)
+
+        self._log_hardware_config()
 
         self.log.debug("------ Mesh ------")
         mesh_content = self._return_file_contents_as_string(self.config["mesh_file"])
@@ -44,6 +47,12 @@ class PFC_Sim(FileIO):
         self.log.debug("")
 
         self._generate_eq_motion()
+
+    def _log_hardware_config(self):
+        self.log.debug("------ Solver & Platform Information ------")
+        self.log.debug(f"Solver: {solvers.solver}")
+        self.log.debug(f"Solver: {solvers.DefaultSolver}")
+        self.log.debug(f"Solver: {solvers.DefaultAsymmetricSolver}\n")
 
     def _generate_mesh(self):
         mesh = Gmsh2DIn3DSpace(self.config["mesh_file"]).extrude(
