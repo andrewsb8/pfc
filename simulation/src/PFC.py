@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 
 from fipy import (
     CellVariable,
@@ -24,43 +25,34 @@ class PFC_Sim(FileIO):
         self.log = log_obj._create_log(self.config["log_file"], time)
         log_obj._log_args(self.log, self.config)
 
-        self._log_hardware_config()
-
         self.log.debug("------ Mesh ------")
         mesh_content = self._return_file_contents_as_string(self.config["mesh_file"])
         self.log.debug(mesh_content)
         self._generate_mesh()
 
-        self.traj_writer = TrajectoryWriter(self.config)
         dset_shape = (
             int(self.config["nsteps"] / self.config["trajectory_write_interval"]) + 1,
             len(self.phi),
         )
-        self.traj_writer._create_dataset(dset_shape)
-        self.traj_writer._store_attribute("time", str(time))
-        self.traj_writer._store_attribute("parameters", json.dumps(self.config))
-        self.traj_writer._store_attribute("mesh", mesh_content)
+        self.traj_writer = TrajectoryWriter(self.config, time, dset_shape, mesh_content)
 
         self.log.debug("------ Simulation details ------")
+        self._configure_solver()
         self.log.debug(f"Number of expected output frames: {dset_shape[0]}")
         self.log.debug(f"Number of cells: {len(self.phi)}")
         self.log.debug("")
 
         self._generate_eq_motion()
 
-    def _log_hardware_config(self):
-        self.log.debug("------ Solver & Platform Information ------")
-        self.log.debug(f"Solver: {solvers.solver}")
+    def _configure_solver(self):
+        os.environ["FIPY_SOLVERS"] = self.config["solver"]
         self.log.debug(f"Solver: {solvers.DefaultSolver}")
-        self.log.debug(f"Solver: {solvers.DefaultAsymmetricSolver}\n")
+        self.log.debug(f"Asymmetric Solver: {solvers.DefaultAsymmetricSolver}")
 
     def _generate_mesh(self):
         mesh = Gmsh2DIn3DSpace(self.config["mesh_file"]).extrude(
             extrudeFunc=lambda r: 1.1 * r
         )
-
-        # gmsh code for creating meshed sphere is given above
-        # set up variables, parameters, and initial condition
         self.phi = CellVariable(name=r"$\phi$", mesh=mesh)
         self.phi.setValue(GaussianNoiseVariable(mesh=mesh, mean=0, variance=0.04))
 

@@ -9,6 +9,7 @@ tau: 20.0
 # Simulation parameters
 dt: 0.005
 nsteps: 1
+solver: pyamgx # options: scipy for single-threaded, petsc (not implemented) for parallel cpu, pyamgx for gpu
 
 # inputs
 mesh_file: "mesh.geo"
