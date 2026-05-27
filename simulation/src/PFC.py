@@ -46,9 +46,9 @@ class PFC_Sim(FileIO):
 
     def _configure_solver(self):
         if os.environ.get("FIPY_SOLVERS") == "pyamgx":
-            from fipy.solvers.pyamgx.pyAMGXSolver import PyAMGXSolver
+            from fipy.solvers.pyamgx.linearGMRESSolver import LinearGMRESSolver
 
-            cfg_dict = {
+            """cfg_dict = {
                 "config_version": 2,
                 "determinism_flag": 1,
                 "exception_handling": 1,
@@ -82,14 +82,13 @@ class PFC_Sim(FileIO):
                     "tolerance": 1e-06,
                     "norm": "L2",
                 },
-            }
+            }"""
 
-            self.solver = PyAMGXSolver(cfg_dict)
+            self.solver = LinearGMRESSolver()
+            self.log.debug(f"Solver: {self.solver}")
         else:
             self.solver = None
-        self.log.debug(f"self.solver: {self.solver}")
-        self.log.debug(f"Default Solver: {solvers.DefaultSolver}")
-        self.log.debug(f"Default Asymmetric Solver: {solvers.DefaultAsymmetricSolver}")
+            self.log.debug(f"Solver: {solvers.DefaultSolver}")
 
     def _generate_mesh(self):
         mesh = Gmsh2DIn3DSpace(self.config["mesh_file"]).extrude(

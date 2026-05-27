@@ -13,4 +13,7 @@ You can install `gmsh` via a package manager or download compiled binaries from 
 
 ### GPU Support
 
-To use GPUs to accelerate PFC simulations, the [AMGX](https://github.com/NVIDIA/AMGX) AND [pyamgx](https://github.com/shwina/pyamgx) packages are required. Install the former with `CMake` and `CUDA`. Before installing `pyamgx`, run `pip install Cython`. Then install the `pyamgx` via the installation instructions. If in a conda environment or equivalent (venv, etc), change the installation command to `pip install --no-build-isolation .`.
+To use GPUs to accelerate PFC simulations, the [AMGX](https://github.com/NVIDIA/AMGX) AND [pyamgx](https://github.com/shwina/pyamgx) packages are required. Once `AMGX` is compiled, follow `pyamgx` installation instructions. Potential extra steps are specified below:
+
+- Install extra requirement `Cython`: `$ pip install Cython`
+- If in virtual python environment (i.e. on cluster), install `pyamgx` with: `$ pip install --no-build-isolation .`

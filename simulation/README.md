@@ -8,6 +8,10 @@ After installing dependencies and setting up your python environment (see top le
 
 `$ python simulate.py`
 
+To specify specific solvers (like `pyamgx` for gpu acceleration), run the command like
+
+`$ FIPY_SOLVERS=pyamgx python simulate.py`
+
 ### Configuration Files
 
 - mesh.geo: Contains information for constructing the surface, a sphere in this case
@@ -20,3 +24,7 @@ After installing dependencies and setting up your python environment (see top le
 Simulations will output two files:
 - Log File: Parameters, warnings, errors, and progress information.
 - H5DF Trajectory File: Also contains parameters for redundancy and the time evolution of the field.
+
+### Running on HPC
+
+`slurm.sh` and `slurm_gpu.sh` provide examples for everything you should need to run `simulate.py` on a cluster which uses the slurm job manager.
