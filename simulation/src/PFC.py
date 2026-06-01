@@ -4,11 +4,11 @@ import os
 
 from fipy import (
     CellVariable,
+    DefaultSolver,
     DiffusionTerm,
     GaussianNoiseVariable,
     Gmsh2DIn3DSpace,
     TransientTerm,
-    solvers,
 )
 from src.fileIO import FileIO
 from src.logging import Log
@@ -45,50 +45,15 @@ class PFC_Sim(FileIO):
         self._generate_eq_motion()
 
     def _configure_solver(self):
-        if os.environ.get("FIPY_SOLVERS") == "pyamgx":
+        env_var = os.environ.get("FIPY_SOLVERS")
+        if env_var == "pyamgx":
             from fipy.solvers.pyamgx.linearGMRESSolver import LinearGMRESSolver
 
-            """cfg_dict = {
-                "config_version": 2,
-                "determinism_flag": 1,
-                "exception_handling": 1,
-                "solver": {
-                    "print_grid_stats": 1,
-                    "store_res_history": 1,
-                    "solver": "GMRES",
-                    "print_solve_stats": 1,
-                    "obtain_timings": 1,
-                    "preconditioner": {
-                        "interpolator": "D2",
-                        "print_grid_stats": 1,
-                        "solver": "AMG",
-                        "smoother": "JACOBI_L1",
-                        "presweeps": 2,
-                        "selector": "PMIS",
-                        "coarsest_sweeps": 2,
-                        "coarse_solver": "NOSOLVER",
-                        "max_iters": 1,
-                        "interp_max_elements": 4,
-                        "min_coarse_rows": 2,
-                        "scope": "amg_solver",
-                        "max_levels": 24,
-                        "cycle": "V",
-                        "postsweeps": 2,
-                    },
-                    "max_iters": 100,
-                    "monitor_residual": 1,
-                    "gmres_n_restart": 10,
-                    "convergence": "RELATIVE_INI_CORE",
-                    "tolerance": 1e-06,
-                    "norm": "L2",
-                },
-            }"""
-
             self.solver = LinearGMRESSolver()
-            self.log.debug(f"Solver: {self.solver}")
         else:
-            self.solver = None
-            self.log.debug(f"Solver: {solvers.DefaultSolver}")
+            self.solver = DefaultSolver()
+        self.log.debug(f"FIPY_SOLVERS={env_var}")
+        self.log.debug(f"Solver: {self.solver}")
 
     def _generate_mesh(self):
         mesh = Gmsh2DIn3DSpace(self.config["mesh_file"]).extrude(
@@ -110,10 +75,11 @@ class PFC_Sim(FileIO):
 
     def _simulate(self):
         self.log.debug("------ Simulation Progress ------")
-        self.traj_writer._write_data(0, self.phi)
-        for i in range(1, self.config["nsteps"] + 1):
-            self.eq.solve(self.phi, dt=self.config["dt"], solver=self.solver)
-            if i % self.config["trajectory_write_interval"] == 0:
-                self.traj_writer._write_data(i, self.phi)
-            self.log.info(f"Step {i} complete.")
-        self.traj_writer.traj_file.close()
+        with self.solver:
+            self.traj_writer._write_data(0, self.phi)
+            for i in range(1, self.config["nsteps"] + 1):
+                self.eq.solve(self.phi, dt=self.config["dt"], solver=self.solver)
+                if i % self.config["trajectory_write_interval"] == 0:
+                    self.traj_writer._write_data(i, self.phi)
+                self.log.info(f"Step {i} complete.")
+            self.traj_writer.traj_file.close()

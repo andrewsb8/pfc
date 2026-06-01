@@ -27,4 +27,4 @@ Simulations will output two files:
 
 ### Running on HPC
 
-`slurm.sh` and `slurm_gpu.sh` provide examples for everything you should need to run `simulate.py` on a cluster which uses the slurm job manager.
+This directory contains `slurm_[platform].sh` which shows example execution and required modules for running simulations in an HPC environment. If executing locally, you can copy the final line of each file to run with desired hardware support.
