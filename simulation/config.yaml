@@ -1,14 +1,13 @@
 # Variables and coefficients
-D: 1
-K: 1
-qn: 1.5
-u4: 120.0
-u3: -40.0
-tau: 20.0
+alpha: 20
+b: -0.333333
+phi0: 0.25
+phi_var: 0.004
 
 # Simulation parameters
 dt: 0.005
-nsteps: 1
+nsteps: 5
+iterations: 10000 # used by pyamgx solver for better convergence
 
 # inputs
 mesh_file: "mesh.geo"

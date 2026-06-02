@@ -1,5 +1,6 @@
 import datetime
 import json
+import math
 import os
 
 from fipy import (
@@ -47,11 +48,11 @@ class PFC_Sim(FileIO):
     def _configure_solver(self):
         env_var = os.environ.get("FIPY_SOLVERS")
         if env_var == "pyamgx":
-            from fipy.solvers.pyamgx.linearGMRESSolver import LinearGMRESSolver
+            from fipy.solvers.pyamgx import LinearGMRESSolver
 
-            self.solver = LinearGMRESSolver()
+            self.solver = LinearGMRESSolver(iterations=self.config["iterations"])
         else:
-            self.solver = DefaultSolver()
+            self.solver = DefaultSolver(iterations=self.config["iterations"])
         self.log.debug(f"FIPY_SOLVERS={env_var}")
         self.log.debug(f"Solver: {self.solver}")
 
@@ -59,27 +60,38 @@ class PFC_Sim(FileIO):
         mesh = Gmsh2DIn3DSpace(self.config["mesh_file"]).extrude(
             extrudeFunc=lambda r: 1.1 * r
         )
-        self.phi = CellVariable(name=r"$\phi$", mesh=mesh)
-        self.phi.setValue(GaussianNoiseVariable(mesh=mesh, mean=0, variance=0.04))
+        self.phi = CellVariable(name=r"$\phi$", mesh=mesh, hasOld=True)
+        self.phi.setValue(
+            GaussianNoiseVariable(
+                mesh=mesh, mean=self.config["phi0"], variance=self.config["phi_var"]
+            )
+        )
 
     def _generate_eq_motion(self):
         c = self.config  # avoid rewriting self.config a ton in equations
         PHI = self.phi.arithmeticFaceValue
+        k = math.sqrt(3.0 / (2 + math.sqrt(1 - (3 * c["b"]))))
+        invksq = 1 / (k**2)
         # define the conserved dynamics equation
-        self.sourcey = (c["u4"] * 0.5 * PHI * PHI + c["u3"] * PHI + c["tau"]) + c[
-            "D"
-        ] * c["K"] * c["qn"] ** 4
-        self.eq = TransientTerm() == DiffusionTerm(coeff=self.sourcey) + DiffusionTerm(
-            coeff=(2 * c["qn"] ** 2, c["D"] * c["K"])
-        ) + DiffusionTerm(coeff=(1.0, 1.0, c["D"] * c["K"]))
+        self.eq = TransientTerm() == DiffusionTerm(
+            coeff=3 * c["alpha"] * PHI * PHI - c["alpha"]
+        ) + DiffusionTerm(coeff=(1.0, invksq)) + DiffusionTerm(
+            coeff=(-1.0, c["b"] * invksq)
+        ) + DiffusionTerm(coeff=(1.0, invksq, 2 * invksq)) + DiffusionTerm(
+            coeff=(1.0, invksq, invksq, invksq)
+        )
 
     def _simulate(self):
         self.log.debug("------ Simulation Progress ------")
+        self.log.info("# step, residual")
         with self.solver:
             self.traj_writer._write_data(0, self.phi)
             for i in range(1, self.config["nsteps"] + 1):
-                self.eq.solve(self.phi, dt=self.config["dt"], solver=self.solver)
+                self.phi.updateOld()
+                residual = self.eq.sweep(
+                    var=self.phi, dt=self.config["dt"], solver=self.solver
+                )
                 if i % self.config["trajectory_write_interval"] == 0:
                     self.traj_writer._write_data(i, self.phi)
-                self.log.info(f"Step {i} complete.")
+                self.log.info(f"{i}, {residual}.")
             self.traj_writer.traj_file.close()
