@@ -93,5 +93,5 @@ class PFC_Sim(FileIO):
                 )
                 if i % self.config["trajectory_write_interval"] == 0:
                     self.traj_writer._write_data(i, self.phi)
-                self.log.info(f"{i}, {residual}.")
+                self.log.info(f"{i}, {residual}")
             self.traj_writer.traj_file.close()
