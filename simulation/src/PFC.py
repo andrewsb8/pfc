@@ -42,8 +42,7 @@ class PFC_Sim(FileIO):
         self.log.debug("------ Simulation details ------")
         self._configure_solver()
         self.log.debug(f"Number of expected output frames: {dset_shape[0]}")
-        self.log.debug(f"Number of cells: {len(self.phi)}")
-        self.log.debug("")
+        self.log.debug(f"Number of cells: {len(self.phi)}\n")
 
         self._generate_eq_motion()
 
@@ -112,5 +111,7 @@ class PFC_Sim(FileIO):
                     var=self.phi, dt=self.config["dt"], solver=self.solver
                 )
                 if i % self.config["trajectory_write_interval"] == 0:
-                    self.traj_writer._write_data(i, self.phi)
+                    self.traj_writer._write_data(
+                        i / self.config["trajectory_write_interval"], self.phi
+                    )
                 self.log.info(f"{i}, {residual}")
