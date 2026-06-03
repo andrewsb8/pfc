@@ -21,3 +21,7 @@ class TrajectoryWriter(object):
 
     def _write_data(self, step, data):
         self.traj_file.traj[step] = data
+        self.traj_file.flush()
+
+    def __del__(self):
+        self.traj_file.close()

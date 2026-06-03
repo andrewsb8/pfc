@@ -86,7 +86,7 @@ class PFC_Sim(FileIO):
     def _simulate(self):
         self.log.debug("------ Simulation Progress ------")
         self.log.info("# step, residual")
-        with self.solver:
+        with self.solver, self.traj_writer.traj_file:
             self.traj_writer._write_data(0, self.phi)
             for i in range(1, self.config["nsteps"] + 1):
                 self.phi.updateOld()
@@ -96,4 +96,3 @@ class PFC_Sim(FileIO):
                 if i % self.config["trajectory_write_interval"] == 0:
                     self.traj_writer._write_data(i, self.phi)
                 self.log.info(f"{i}, {residual}")
-            self.traj_writer.traj_file.close()
