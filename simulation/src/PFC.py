@@ -5,10 +5,8 @@ import os
 
 from fipy import (
     CellVariable,
-    DefaultSolver,
     DiffusionTerm,
     GaussianNoiseVariable,
-    Gmsh2DIn3DSpace,
     TransientTerm,
 )
 from src.fileIO import FileIO
@@ -27,9 +25,13 @@ class PFC_Sim(FileIO):
         log_obj._log_args(self.log, self.config)
 
         self.log.debug("------ Mesh ------")
-        mesh_content = self._return_file_contents_as_string(self.config["mesh_file"])
+        if self.config["dim"] == 2:
+            mesh_content = self._generate_mesh_2D()
+        elif self.config["dim"] == 3:
+            mesh_content = self._generate_mesh_3D()
+        else:
+            raise ValueError("Invalid dimension choice. Options: 2, 3")
         self.log.debug(mesh_content)
-        self._generate_mesh()
 
         dset_shape = (
             int(self.config["nsteps"] / self.config["trajectory_write_interval"]) + 1,
@@ -58,10 +60,26 @@ class PFC_Sim(FileIO):
         self.log.debug(f"FIPY_SOLVERS={env_var}")
         self.log.debug(f"Solver: {self.solver}")
 
-    def _generate_mesh(self):
+    def _generate_mesh_2D(self):
+        from fipy import PeriodicGrid2D
+
+        mesh = PeriodicGrid2D(
+            dx=0.5, dy=0.5, nx=self.config["nx"], ny=self.config["ny"]
+        )
+        self._initialize_field_values(mesh)
+        return f"PeriodicGrid2D(dx=0.5, dy=0.5, nx={self.config['nx']}, ny={self.config['ny']})\n"
+
+    def _generate_mesh_3D(self):
+        from fipy import Gmsh2DIn3DSpace
+
+        mesh_content = self._return_file_contents_as_string(self.config["mesh_file"])
         mesh = Gmsh2DIn3DSpace(self.config["mesh_file"]).extrude(
             extrudeFunc=lambda r: 1.1 * r
         )
+        self._initialize_field_values(mesh)
+        return mesh_content
+
+    def _initialize_field_values(self, mesh):
         self.phi = CellVariable(name=r"$\phi$", mesh=mesh, hasOld=True)
         self.phi.setValue(
             GaussianNoiseVariable(
