@@ -52,7 +52,9 @@ class PFC_Sim(FileIO):
 
             self.solver = LinearGMRESSolver(iterations=self.config["iterations"])
         else:
-            self.solver = DefaultSolver(iterations=self.config["iterations"])
+            from fipy.solvers.scipy import LinearGMRESSolver
+
+            self.solver = LinearGMRESSolver(iterations=self.config["iterations"])
         self.log.debug(f"FIPY_SOLVERS={env_var}")
         self.log.debug(f"Solver: {self.solver}")
 
