@@ -6,15 +6,15 @@ phi_var: 0.004
 
 # Simulation parameters
 dt: 0.005
-nsteps: 1
-iterations: 10000
+nsteps: 10
+iterations: 1000
 
 # dimension: 2 for 2D grid, 3 for Gmsh2DIn3DSpace
 dim: 2
 
 # 2D Grid inputs:
-nx: 100
-ny: 100
+nx: 10
+ny: 10
 dx: 1
 dy: 1
 
