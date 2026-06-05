@@ -13,8 +13,8 @@ iterations: 10000
 dim: 2
 
 # 2D Grid inputs:
-nx: 5
-ny: 5
+nx: 100
+ny: 100
 
 # input files
 mesh_file: "mesh.geo" # contains inputs for Gmsh2DIn3DSpace

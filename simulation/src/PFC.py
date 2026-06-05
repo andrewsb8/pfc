@@ -102,6 +102,7 @@ class PFC_Sim(FileIO):
 
     def _simulate(self):
         self.log.debug("------ Simulation Progress ------")
+        self.log.debug(f"Initial field sample: {self.phi[0:10]}")
         self.log.info("# step, residual")
         with self.solver, self.traj_writer.traj_file:
             self.traj_writer._write_data(0, self.phi)
@@ -112,6 +113,7 @@ class PFC_Sim(FileIO):
                 )
                 if i % self.config["trajectory_write_interval"] == 0:
                     self.traj_writer._write_data(
-                        i / self.config["trajectory_write_interval"], self.phi
+                        int(i / self.config["trajectory_write_interval"]), self.phi
                     )
+                    self.log.debug(f"Field sample: {self.phi[0:10]}")
                 self.log.info(f"{i}, {residual}")

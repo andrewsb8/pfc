@@ -13,6 +13,7 @@ from fipy import (
 from numpy._core.strings import center
 
 infile = sys.argv[1]
+frame = sys.argv[2]
 data = h5py.File(infile, "r")
 center_values = data["trajectory"][-1]
 mesh_str = data["trajectory"].attrs["mesh"]
