@@ -13,9 +13,9 @@ from fipy import (
 from numpy._core.strings import center
 
 infile = sys.argv[1]
-frame = sys.argv[2]
+frame = int(sys.argv[2])
 data = h5py.File(infile, "r")
-center_values = data["trajectory"][-1]
+center_values = data["trajectory"][frame]
 mesh_str = data["trajectory"].attrs["mesh"]
 
 mesh = Gmsh2DIn3DSpace(mesh_str).extrude(extrudeFunc=lambda r: 1.1 * r)
