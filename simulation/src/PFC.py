@@ -63,7 +63,10 @@ class PFC_Sim(FileIO):
         from fipy import PeriodicGrid2D
 
         mesh = PeriodicGrid2D(
-            dx=0.5, dy=0.5, nx=self.config["nx"], ny=self.config["ny"]
+            dx=self.config["dx"],
+            dy=self.config["dy"],
+            nx=self.config["nx"],
+            ny=self.config["ny"],
         )
         self._initialize_field_values(mesh)
         return f"PeriodicGrid2D(dx=0.5, dy=0.5, nx={self.config['nx']}, ny={self.config['ny']})\n"

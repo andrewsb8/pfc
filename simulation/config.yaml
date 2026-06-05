@@ -15,8 +15,10 @@ dim: 2
 # 2D Grid inputs:
 nx: 100
 ny: 100
+dx: 1
+dy: 1
 
-# input files
+# 3D input files
 mesh_file: "mesh.geo" # contains inputs for Gmsh2DIn3DSpace
 
 # outputs
