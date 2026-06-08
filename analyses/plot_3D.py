@@ -54,7 +54,7 @@ sc = ax.scatter3D(
     z3dn,
     c=valc,
     s=20,  # roughly matches scale_factor=0.5 spheres; tune s as needed
-    cmap="YlOrBr",
+    cmap="binary",
     alpha=0.8,
 )
 
