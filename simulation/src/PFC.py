@@ -1,19 +1,14 @@
 import datetime
-import json
 import math
-import os
 
 import numpy as np
 from fipy import (
     CellVariable,
-    DiffusionTerm,
     GaussianNoiseVariable,
 )
 from src.fileIO import FileIO
 from src.logging import Log
 from src.trajectory import TrajectoryWriter
-
-# from fipy.tools import dump # may want when generating output time steps
 
 
 class PFC_Sim(FileIO):
