@@ -1,6 +1,7 @@
 # example script that prints final frame from an HDF5
 # file containing phase field crystal simulation
 
+import json
 import sys
 
 import h5py
@@ -16,12 +17,12 @@ infile = sys.argv[1]
 frame = int(sys.argv[2])
 data = h5py.File(infile, "r")
 center_values = data["trajectory"][frame]
-mesh_str = data["trajectory"].attrs["mesh"]
+params = json.loads(data["trajectory"].attrs["parameters"])
 
-nx = 100
-ny = 100
-dx = 0.5
-dy = 0.5
+nx = params["nx"]
+ny = params["ny"]
+dx = params["dx"]
+dy = params["dy"]
 mesh = PeriodicGrid2D(dx=dx, dy=dy, nx=nx, ny=ny)
 phi = CellVariable(name=r"$\phi$", mesh=mesh)
 phi.setValue(center_values)
