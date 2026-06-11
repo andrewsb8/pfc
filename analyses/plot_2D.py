@@ -18,8 +18,8 @@ data = h5py.File(infile, "r")
 center_values = data["trajectory"][frame]
 mesh_str = data["trajectory"].attrs["mesh"]
 
-nx = 200
-ny = 200
+nx = 100
+ny = 100
 dx = 0.5
 dy = 0.5
 mesh = PeriodicGrid2D(dx=dx, dy=dy, nx=nx, ny=ny)

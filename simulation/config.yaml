@@ -5,18 +5,17 @@ phi0: 0.25
 phi_var: 0.004
 
 # Simulation parameters
-dt: 0.005
+dt: 0.0000000000001
 nsteps: 10
-iterations: 1000
 
 # dimension: 2 for 2D grid, 3 for Gmsh2DIn3DSpace
 dim: 2
 
 # 2D Grid inputs:
-nx: 10
-ny: 10
-dx: 1
-dy: 1
+nx: 100
+ny: 100
+dx: 0.5
+dy: 0.5
 
 # 3D input files
 mesh_file: "mesh.geo" # contains inputs for Gmsh2DIn3DSpace
