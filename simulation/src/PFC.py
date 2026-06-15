@@ -1,5 +1,6 @@
 import datetime
 import math
+from copy import deepcopy
 
 import numpy as np
 from fipy import (
@@ -62,6 +63,7 @@ class PFC_Sim(FileIO):
             self.phi.value, shape=((self.config["nx"], self.config["ny"]))
         )
         self.phi_hat = self._fft_phi(phi_2D, self.config)
+        self.phi_hat_old = deepcopy(self.phi_hat)
 
         # generate k space wavevectors
         kx = 2 * np.pi * np.fft.fftfreq(nx, d=dx)  # shape (Nx,)
@@ -97,7 +99,7 @@ class PFC_Sim(FileIO):
         K2 = self.K2
         k0 = math.sqrt(3.0 / (2 + math.sqrt(1 - (3 * co["b"]))))
         invk0sq = 1 / (k0**2)
-        c = (
+        self.c = (
             co["D"]
             * K2
             * (
@@ -105,16 +107,6 @@ class PFC_Sim(FileIO):
                 - co["alpha"]
             )
         )
-
-        # Pre-compute ETD coefficients
-        self.eL = np.exp(c * co["dt"])
-        # Stable computation of (e^x - 1)/x via expm1 to avoid cancellation near x≈0
-        with np.errstate(divide="ignore", invalid="ignore"):
-            self.eL_inv_m1 = np.where(
-                np.abs(c * co["dt"]) < 1e-10,
-                co["dt"],  # limit as L_hat → 0
-                (np.expm1(c * co["dt"]) - 1) / c,
-            )
 
     def _ifft_phi_hat(self, phi_hat, conf):
         # inverse FFT to real space in 2D or 3D and recollapse
@@ -130,13 +122,30 @@ class PFC_Sim(FileIO):
         else:
             raise NotImplementedError()
 
-    def etd1(self, phi_hat, eL, eL_inv_m1, K2, conf):
+    def _set_phi_old(self, phi_hat):
+        self.phi_hat_old = deepcopy(phi_hat)
+
+    def AB2BD2(self, phi_hat, phi_hat_old, K2, time_step, conf):
         # get nonlinear term
         phi = self._ifft_phi_hat(phi_hat, conf)
         phi3 = phi**3
+        if time_step > 1:  # at first time step phi and phi_old will be equivalent
+            phi_old = self._ifft_phi_hat(phi_hat_old, conf)
+            phi3_old = phi_old**3
+        else:
+            phi3_old = phi3
         F = conf["alpha"] * K2 * self._fft_phi(phi3, conf)
-        # return result of first order exponential time diff
-        return (eL * phi_hat) + (eL_inv_m1 * F)
+        F_old = conf["alpha"] * K2 * self._fft_phi(phi3_old, conf)
+        new_phi_hat = (
+            (4 * phi_hat)
+            - phi_hat_old
+            + (4 * conf["dt"] * F)
+            - (2 * conf["dt"] * F_old)
+        ) / (3 - (2 * conf["dt"] * self.c))
+        self._set_phi_old(
+            phi_hat
+        )  # update phi_hat_old to phi_hat before updating phi_hat
+        return new_phi_hat
 
     def _simulate(self):
         self.log.debug("------ Simulation Progress ------")
@@ -147,8 +156,8 @@ class PFC_Sim(FileIO):
         with self.traj_writer.traj_file:
             self.traj_writer._write_data(0, self.phi)
             for i in range(1, self.config["nsteps"] + 1):
-                self.phi_hat = self.etd1(
-                    self.phi_hat, self.eL, self.eL_inv_m1, self.K2, self.config
+                self.phi_hat = self.AB2BD2(
+                    self.phi_hat, self.phi_hat_old, self.K2, i, self.config
                 )
                 if i % self.config["trajectory_write_interval"] == 0:
                     phi = self._ifft_phi_hat(self.phi_hat, self.config).ravel()
