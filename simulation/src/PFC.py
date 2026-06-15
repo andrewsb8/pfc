@@ -97,9 +97,13 @@ class PFC_Sim(FileIO):
         K2 = self.K2
         k0 = math.sqrt(3.0 / (2 + math.sqrt(1 - (3 * co["b"]))))
         invk0sq = 1 / (k0**2)
-        c = K2 * (
-            (K2 * invk0sq * (K2 * invk0sq + 1) ** 2 - (co["b"] * K2 * invk0sq))
-            - co["alpha"]
+        c = (
+            co["D"]
+            * K2
+            * (
+                (K2 * invk0sq * (K2 * invk0sq + 1) ** 2 - (co["b"] * K2 * invk0sq))
+                - co["alpha"]
+            )
         )
 
         # Pre-compute ETD coefficients

@@ -11,7 +11,6 @@ from fipy import (
     CellVariable,
     PeriodicGrid2D,
 )
-from numpy._core.strings import center
 
 infile = sys.argv[1]
 frame = int(sys.argv[2])
@@ -44,7 +43,7 @@ im = ax.imshow(
     phi_arr,
     origin="lower",
     extent=(x_min, x_max, y_min, y_max),
-    cmap="binary",
+    cmap="binary_r",
     aspect="equal",
 )
 fig.colorbar(im, ax=ax, label=r"$\phi$")

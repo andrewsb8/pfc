@@ -10,7 +10,6 @@ from fipy import (
     CellVariable,
     Gmsh2DIn3DSpace,
 )
-from numpy._core.strings import center
 
 infile = sys.argv[1]
 frame = int(sys.argv[2])
@@ -54,7 +53,7 @@ sc = ax.scatter3D(
     z3dn,
     c=valc,
     s=20,  # roughly matches scale_factor=0.5 spheres; tune s as needed
-    cmap="binary",
+    cmap="binary_r",
     alpha=0.8,
 )
 
