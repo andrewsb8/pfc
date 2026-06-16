@@ -101,7 +101,10 @@ class PFC_Sim(FileIO):
             co["D"]
             * K2
             * (
-                (K2 * invk0sq * (K2 * invk0sq + 1) ** 2 - (co["b"] * K2 * invk0sq))
+                (
+                    K2 * invk0sq * (K2 * invk0sq + co["q0"]) ** 2
+                    - (co["b"] * K2 * invk0sq)
+                )
                 - co["alpha"]
             )
         )
