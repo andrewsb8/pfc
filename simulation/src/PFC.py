@@ -66,9 +66,9 @@ class PFC_Sim(FileIO):
         # generate k space wavevectors
         kx = 2 * np.pi * np.fft.fftfreq(nx, d=dx)  # shape (Nx,)
         ky = 2 * np.pi * np.fft.fftfreq(ny, d=dy)  # shape (Ny,)
-        KX, KY = np.meshgrid(kx, ky, indexing="ij")  # shape (Nx, Ny)
-        K2 = KX**2 + KY**2
-        self.K2 = K2
+        self.KX, self.KY = np.meshgrid(kx, ky, indexing="ij")  # shape (Nx, Ny)
+        self.K2 = self.KX**2 + self.KY**2
+        # self.dealias_mask = self.K2 < (1 / 4) * np.max(self.K2)
 
         return f"PeriodicGrid2D(dx={self.config['dx']}, dy={self.config['dy']}, nx={self.config['nx']}, ny={self.config['ny']})\n"
 
