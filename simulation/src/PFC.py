@@ -1,5 +1,6 @@
 import datetime
 import math
+from copy import deepcopy
 
 import numpy as np
 from fipy import (
@@ -36,7 +37,7 @@ class PFC_Sim(FileIO):
 
         self.log.debug("------ Simulation details ------")
         self.log.debug(f"Number of expected output frames: {dset_shape[0]}")
-        self.log.debug(f"Number of cells: {len(self.phi)}\n")
+        self.log.debug(f"Number of cells: {len(self.phi)}")
 
         self._generate_eq_motion()
 
@@ -68,7 +69,7 @@ class PFC_Sim(FileIO):
         ky = 2 * np.pi * np.fft.fftfreq(ny, d=dy)  # shape (Ny,)
         self.KX, self.KY = np.meshgrid(kx, ky, indexing="ij")  # shape (Nx, Ny)
         self.K2 = self.KX**2 + self.KY**2
-        # self.dealias_mask = self.K2 < (1 / 4) * np.max(self.K2)
+        # self.dealias_mask = self.K2 < (1 / 2) * np.max(self.K2)
 
         return f"PeriodicGrid2D(dx={self.config['dx']}, dy={self.config['dy']}, nx={self.config['nx']}, ny={self.config['ny']})\n"
 
@@ -98,12 +99,12 @@ class PFC_Sim(FileIO):
         k0 = math.sqrt(3.0 / (2 + math.sqrt(1 - (3 * co["b"]))))
         invk0sq = 1 / (k0**2)
         c = (
-            co["D"]
+            -co["D"]
             * K2
             * (
                 (
-                    K2 * invk0sq * (K2 * invk0sq + co["q0"]) ** 2
-                    - (co["b"] * K2 * invk0sq)
+                    K2 * invk0sq * (co["q0"] - (K2 * invk0sq)) ** 2
+                    + (co["b"] * K2 * invk0sq)
                 )
                 - co["alpha"]
             )
@@ -116,8 +117,18 @@ class PFC_Sim(FileIO):
             self.eL_inv_m1 = np.where(
                 np.abs(c * co["dt"]) < 1e-10,
                 co["dt"],  # limit as L_hat → 0
-                (np.expm1(c * co["dt"]) - 1) / c,
+                (np.expm1(c * co["dt"])) / c,
             )
+        self.log.debug(f"Max calculated wavevector from dx (pi/dx): {np.pi / co['dx']}")
+        self.log.debug(f"Max 2D plane wavevector magnitude: {np.max(K2)}")
+        self.log.debug(f"Max value of linear operator: {np.max(c)}")
+        self.log.debug(
+            f"Max of exponentiation of linear operator * dt: {np.max(self.eL)}"
+        )
+        hat_max = np.unravel_index(self.eL.argmax(), self.eL.shape)
+        self.log.debug(
+            f"Wavevector at max of exponential of linear operator * dt: {K2[hat_max]}"
+        )
 
     def _ifft_phi_hat(self, phi_hat, conf):
         # inverse FFT to real space in 2D or 3D and recollapse
@@ -135,9 +146,10 @@ class PFC_Sim(FileIO):
 
     def etd1(self, phi_hat, eL, eL_inv_m1, K2, conf):
         # get nonlinear term
+        # phi_hat_d = deepcopy(phi_hat) * self.dealias_mask
         phi = self._ifft_phi_hat(phi_hat, conf)
         phi3 = phi**3
-        F = conf["alpha"] * K2 * self._fft_phi(phi3, conf)
+        F = (-K2) * conf["D"] * conf["alpha"] * self._fft_phi(phi3, conf)
         # return result of first order exponential time diff
         return (eL * phi_hat) + (eL_inv_m1 * F)
 
@@ -159,6 +171,9 @@ class PFC_Sim(FileIO):
                     self.traj_writer._write_data(
                         int(i / self.config["trajectory_write_interval"]), self.phi
                     )
+                    hat_max = np.unravel_index(
+                        self.phi_hat.argmax(), self.phi_hat.shape
+                    )
                     self.log.info(
-                        f"{i}, {np.mean(self.phi.value)}, {np.max(self.phi.value)}, {np.min(self.phi.value)}, {np.max(self.phi_hat)}"
+                        f"{i}, {np.mean(self.phi.value)}, {np.max(self.phi.value)}, {np.min(self.phi.value)}, {np.max(self.phi_hat)}, {self.K2[hat_max]}, {self.eL[hat_max]}"
                     )

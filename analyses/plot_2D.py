@@ -46,9 +46,11 @@ im = ax.imshow(
     cmap="binary_r",
     aspect="equal",
 )
-fig.colorbar(im, ax=ax, label=r"$\phi$")
-ax.set_xlabel("x")
-ax.set_ylabel("y")
-ax.set_title(r"Cell values $\phi$ on Grid2D")
+cbar = fig.colorbar(im, ax=ax)
+cbar.set_label(r"$\phi$", fontsize=16)
+cbar.ax.tick_params(labelsize=14)
+ax.set_xlabel("x", fontsize=16)
+ax.set_ylabel("y", fontsize=16)
+ax.tick_params("both", labelsize=14)
 plt.tight_layout()
 plt.show()
