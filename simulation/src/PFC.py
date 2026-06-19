@@ -119,6 +119,12 @@ class PFC_Sim(FileIO):
                 co["dt"],  # limit as L_hat → 0
                 (np.expm1(c * co["dt"])) / c,
             )
+        with np.errstate(divide="ignore", invalid="ignore"):
+            self.eL_inv_m1_so = np.where(
+                np.abs(c * co["dt"]) < 1e-10,
+                co["dt"],  # limit as L_hat → 0
+                (np.expm1(c * co["dt"]) - (c * co["dt"])) / (co["dt"] * c**2),
+            )
         self.log.debug(f"Max calculated wavevector from dx (pi/dx): {np.pi / co['dx']}")
         self.log.debug(f"Max 2D plane wavevector magnitude: {np.max(K2)}")
         self.log.debug(f"Max value of linear operator: {np.max(c)}")
@@ -144,14 +150,16 @@ class PFC_Sim(FileIO):
         else:
             raise NotImplementedError()
 
-    def etd1(self, phi_hat, eL, eL_inv_m1, K2, conf):
+    def etd2rk(self, phi_hat, eL, eL_inv_m1, K2, conf):
         # get nonlinear term
-        # phi_hat_d = deepcopy(phi_hat) * self.dealias_mask
         phi = self._ifft_phi_hat(phi_hat, conf)
         phi3 = phi**3
         F = (-K2) * conf["D"] * conf["alpha"] * self._fft_phi(phi3, conf)
+        an = (eL * phi_hat) + (eL_inv_m1 * F)  # etd1
+        an_r = self._ifft_phi_hat(an, conf)
+        Fnh = (-K2) * conf["D"] * conf["alpha"] * self._fft_phi(an_r**3, conf)
         # return result of first order exponential time diff
-        return (eL * phi_hat) + (eL_inv_m1 * F)
+        return an + (self.eL_inv_m1_so * (Fnh - F))
 
     def _simulate(self):
         self.log.debug("------ Simulation Progress ------")
@@ -162,7 +170,7 @@ class PFC_Sim(FileIO):
         with self.traj_writer.traj_file:
             self.traj_writer._write_data(0, self.phi)
             for i in range(1, self.config["nsteps"] + 1):
-                self.phi_hat = self.etd1(
+                self.phi_hat = self.etd2rk(
                     self.phi_hat, self.eL, self.eL_inv_m1, self.K2, self.config
                 )
                 if i % self.config["trajectory_write_interval"] == 0:
