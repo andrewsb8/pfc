@@ -100,10 +100,13 @@ class PFC_Sim(FileIO):
         k0 = math.sqrt(3.0 / (2 + math.sqrt(1 - (3 * co["b"]))))
         invk0sq = 1 / (k0**2)
         self.c = (
-            co["D"]
+            -co["D"]
             * K2
             * (
-                (K2 * invk0sq * (K2 * invk0sq + 1) ** 2 - (co["b"] * K2 * invk0sq))
+                (
+                    K2 * invk0sq * (co["q0"] - (K2 * invk0sq)) ** 2
+                    + (co["b"] * K2 * invk0sq)
+                )
                 - co["alpha"]
             )
         )
