@@ -1,8 +1,8 @@
 ## Phase Field Crystal Simulation
 
-The directory contains scripts and configuration files for conducting Phase Field Crystal simulations on a periodic 2D Grid or the surface of a sphere (or the surface of any shape constructed via `gmsh`).
+The directory contains scripts and configuration files for conducting Phase Field Crystal simulations on a periodic 2D Grid or the surface of a sphere.
 
-This repository focuses on the evolution of phase fields describing foams as detailed by [Guttenberg et al. PRE. 2010](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.81.065301).
+This repository focuses on the evolution of phase fields describing foams as detailed by [Guttenberg et al. PRE. 2010](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.81.065301). The field is evolved through time with first-order exponential time differentiation ([Cox and Matthews. JCP. 2002](https://www.sciencedirect.com/science/article/abs/pii/S0021999102969950)) and a pseudospectral method to calculate the nonlinear terms which is common for phase field methods ([Moats et al. PRE. 2019](https://journals.aps.org/pre/abstract/10.1103/PhysRevE.99.012803)).
 
 ### Getting Started
 
