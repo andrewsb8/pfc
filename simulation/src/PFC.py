@@ -59,10 +59,9 @@ class PFC_Sim(FileIO):
         self.phi = self._initialize_field_values(mesh)
 
         # generate k-space field
-        phi_2D = np.reshape(
+        self.phi_grid = np.reshape(
             self.phi.value, shape=((self.config["nx"], self.config["ny"]))
         )
-        self.phi_hat = self._fft_phi(phi_2D, self.config)
 
         # generate k space wavevectors
         kx = 2 * np.pi * np.fft.fftfreq(nx, d=dx)  # shape (Nx,)
@@ -144,36 +143,29 @@ class PFC_Sim(FileIO):
         else:
             raise NotImplementedError()
 
-    def etd1(self, phi_hat, eL, eL_inv_m1, K2, conf):
-        # get nonlinear term
-        # phi_hat_d = deepcopy(phi_hat) * self.dealias_mask
-        phi = self._ifft_phi_hat(phi_hat, conf)
-        phi3 = phi**3
-        F = (-K2) * conf["D"] * conf["alpha"] * self._fft_phi(phi3, conf)
-        # return result of first order exponential time diff
-        return (eL * phi_hat) + (eL_inv_m1 * F)
+    def etd1(self, phi, eL, eL_inv_m1, K2, conf):
+        phi_hat = self._fft_phi(phi, conf)
+        F = (-K2) * conf["D"] * conf["alpha"] * self._fft_phi(phi**3, conf)
+        phi_hat_new = (eL * phi_hat) + (eL_inv_m1 * F)
+        return self._ifft_phi_hat(phi_hat_new, conf)
 
     def _simulate(self):
         self.log.debug("------ Simulation Progress ------")
         self.log.info("# step, avg phi, max phi, min phi, max phi hat")
         self.log.info(
-            f"0, {np.mean(self.phi.value)}, {np.max(self.phi.value)}, {np.min(self.phi.value)}, {np.max(self.phi_hat)}"
+            f"0, {np.mean(self.phi.value)}, {np.max(self.phi.value)}, {np.min(self.phi.value)}"
         )
         with self.traj_writer.traj_file:
             self.traj_writer._write_data(0, self.phi)
             for i in range(1, self.config["nsteps"] + 1):
-                self.phi_hat = self.etd1(
-                    self.phi_hat, self.eL, self.eL_inv_m1, self.K2, self.config
+                self.phi_grid = self.etd1(
+                    self.phi_grid, self.eL, self.eL_inv_m1, self.K2, self.config
                 )
                 if i % self.config["trajectory_write_interval"] == 0:
-                    phi = self._ifft_phi_hat(self.phi_hat, self.config).ravel()
-                    self.phi.setValue(phi)
+                    self.phi.setValue(self.phi_grid.ravel())
                     self.traj_writer._write_data(
                         int(i / self.config["trajectory_write_interval"]), self.phi
                     )
-                    hat_max = np.unravel_index(
-                        self.phi_hat.argmax(), self.phi_hat.shape
-                    )
                     self.log.info(
-                        f"{i}, {np.mean(self.phi.value)}, {np.max(self.phi.value)}, {np.min(self.phi.value)}, {np.max(self.phi_hat)}, {self.K2[hat_max]}, {self.eL[hat_max]}"
+                        f"{i}, {np.mean(self.phi.value)}, {np.max(self.phi.value)}, {np.min(self.phi.value)}"
                     )
