@@ -1,6 +1,7 @@
 # example script that prints final frame from an HDF5
 # file containing phase field crystal simulation
 
+import json
 import sys
 
 import h5py
@@ -10,18 +11,17 @@ from fipy import (
     CellVariable,
     PeriodicGrid2D,
 )
-from numpy._core.strings import center
 
 infile = sys.argv[1]
 frame = int(sys.argv[2])
 data = h5py.File(infile, "r")
 center_values = data["trajectory"][frame]
-mesh_str = data["trajectory"].attrs["mesh"]
+params = json.loads(data["trajectory"].attrs["parameters"])
 
-nx = 200
-ny = 200
-dx = 0.5
-dy = 0.5
+nx = params["nx"]
+ny = params["ny"]
+dx = params["dx"]
+dy = params["dy"]
 mesh = PeriodicGrid2D(dx=dx, dy=dy, nx=nx, ny=ny)
 phi = CellVariable(name=r"$\phi$", mesh=mesh)
 phi.setValue(center_values)
@@ -43,12 +43,14 @@ im = ax.imshow(
     phi_arr,
     origin="lower",
     extent=(x_min, x_max, y_min, y_max),
-    cmap="binary",
+    cmap="binary_r",
     aspect="equal",
 )
-fig.colorbar(im, ax=ax, label=r"$\phi$")
-ax.set_xlabel("x")
-ax.set_ylabel("y")
-ax.set_title(r"Cell values $\phi$ on Grid2D")
+cbar = fig.colorbar(im, ax=ax)
+cbar.set_label(r"$\phi$", fontsize=16)
+cbar.ax.tick_params(labelsize=14)
+ax.set_xlabel("x", fontsize=16)
+ax.set_ylabel("y", fontsize=16)
+ax.tick_params("both", labelsize=14)
 plt.tight_layout()
 plt.show()
