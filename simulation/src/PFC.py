@@ -78,6 +78,7 @@ class PFC_Sim(FileIO):
         K2 = self.K2
         k0 = math.sqrt(3.0 / (2 + math.sqrt(1 - (3 * co["b"]))))
         invk0sq = 1 / (k0**2)
+        # linear operator in k space
         c = (
             -co["D"]
             * K2
@@ -93,6 +94,7 @@ class PFC_Sim(FileIO):
         # Pre-compute ETD coefficients
         self.eL = np.exp(c * co["dt"])
         # Stable computation of (e^x - 1)/x via expm1 to avoid cancellation near x≈0
+        # Include other coefficients of nonlinear term
         with np.errstate(divide="ignore", invalid="ignore"):
             self.eL_inv_m1 = np.where(
                 np.abs(c * co["dt"]) < 1e-10,
