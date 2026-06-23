@@ -8,7 +8,7 @@ q0: 1
 
 # Simulation parameters
 dt: 0.001
-nsteps: 25000
+nsteps: 1000000
 
 # dimension: 2 for 2D grid, 3 for Gmsh2DIn3DSpace
 dim: 2
@@ -25,4 +25,4 @@ mesh_file: "mesh.geo" # contains inputs for Gmsh2DIn3DSpace
 # outputs
 log_file: "pfc.log"
 trajectory_file: "pfc.h5"
-trajectory_write_interval: 500 # in number of steps
+trajectory_write_interval: 50000 # in number of steps
