@@ -1,14 +1,18 @@
 # Variables and coefficients
 alpha: 20
 b: -0.33333
-phi0: 0.25
+phi0: 0.4
+phif: -0.6
 phi_var: 0.004
 D: 1
 q0: 1
 
 # Simulation parameters
 dt: 0.001
-nsteps: 1000000
+nsteps: 250000
+drain: True
+drain_start: 0
+drain_stop: 1000
 
 # dimension: 2 for 2D grid, 3 for Gmsh2DIn3DSpace
 dim: 2
@@ -25,4 +29,4 @@ mesh_file: "mesh.geo" # contains inputs for Gmsh2DIn3DSpace
 # outputs
 log_file: "pfc.log"
 trajectory_file: "pfc.h5"
-trajectory_write_interval: 50000 # in number of steps
+trajectory_write_interval: 5000 # in number of steps

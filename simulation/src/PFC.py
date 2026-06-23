@@ -38,6 +38,11 @@ class PFC_Sim(FileIO):
         self.log.debug("------ Simulation details ------")
         self.log.debug(f"Number of expected output frames: {dset_shape[0]}")
         self.log.debug(f"Number of cells: {len(self.phi)}")
+        if self.config["drain"]:
+            self.drain_magnitude = (self.config["phif"] - self.config["phi0"]) / (
+                self.config["drain_stop"] - self.config["drain_start"]
+            )
+            self.log.debug(f"Draining field for first {self.drain_magnitude} steps.")
 
         self._generate_eq_motion()
 
@@ -169,3 +174,6 @@ class PFC_Sim(FileIO):
                     self.log.info(
                         f"{i}, {np.mean(self.phi.value)}, {np.max(self.phi.value)}, {np.min(self.phi.value)}"
                     )
+                if self.config["drain"] and i < self.config["drain_steps"]:
+                    self.phi_grid = np.add(self.phi_grid, self.drain_magnitude)
+                    self.phi.setValue(self.phi_grid.ravel())
