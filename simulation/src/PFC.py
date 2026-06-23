@@ -78,6 +78,7 @@ class PFC_Sim(FileIO):
         K2 = self.K2
         k0 = math.sqrt(3.0 / (2 + math.sqrt(1 - (3 * co["b"]))))
         invk0sq = 1 / (k0**2)
+        # linear operator in k space
         c = (
             -co["D"]
             * K2
@@ -93,6 +94,7 @@ class PFC_Sim(FileIO):
         # Pre-compute ETD coefficients
         self.eL = np.exp(c * co["dt"])
         # Stable computation of (e^x - 1)/x via expm1 to avoid cancellation near x≈0
+        # Include other coefficients of nonlinear term
         with np.errstate(divide="ignore", invalid="ignore"):
             self.eL_inv_m1 = np.where(
                 np.abs(c * co["dt"]) < 1e-10,
@@ -102,10 +104,10 @@ class PFC_Sim(FileIO):
         with np.errstate(divide="ignore", invalid="ignore"):
             self.eL_inv_m1_so = np.where(
                 np.abs(c * co["dt"]) < 1e-10,
-                (-K2) * conf["D"] * conf["alpha"] * co["dt"],  # limit as L_hat → 0
+                (-K2) * co["D"] * co["alpha"] * co["dt"],  # limit as L_hat → 0
                 (-K2)
-                * conf["D"]
-                * conf["alpha"]
+                * co["D"]
+                * co["alpha"]
                 * (np.expm1(c * co["dt"]) - (c * co["dt"]))
                 / (co["dt"] * c**2),
             )
@@ -134,13 +136,13 @@ class PFC_Sim(FileIO):
         else:
             raise NotImplementedError()
 
-    def etd2rk(self, phi, eL, eL_inv_m1, K2, conf):
+    def etd2rk(self, phi, eL, eL_inv_m1, eL_inv_m1_so, conf):
         phi_hat = self._fft_phi(phi, conf)
         F = self._fft_phi(phi**3, conf)
         an = (eL * phi_hat) + (eL_inv_m1 * F)  # etd1
         an_r = self._ifft_phi_hat(an, conf)
         Fnh = self._fft_phi(an_r**3, conf)
-        phi_hat_new = an + (self.eL_inv_m1_so * (Fnh - F))
+        phi_hat_new = an + (eL_inv_m1_so * (Fnh - F))
         return self._ifft_phi_hat(phi_hat_new, conf)
 
     def _simulate(self):
@@ -153,7 +155,11 @@ class PFC_Sim(FileIO):
             self.traj_writer._write_data(0, self.phi_grid.ravel())
             for i in range(1, self.config["nsteps"] + 1):
                 self.phi_grid = self.etd2rk(
-                    self.phi_grid, self.eL, self.eL_inv_m1, self.K2, self.config
+                    self.phi_grid,
+                    self.eL,
+                    self.eL_inv_m1,
+                    self.eL_inv_m1_so,
+                    self.config,
                 )
                 if i % self.config["trajectory_write_interval"] == 0:
                     self.traj_writer._write_data(
