@@ -1,16 +1,20 @@
 # Variables and coefficients
 alpha: 20
 b: -0.33333
-phi0: 0.25
+phi0: 0.4
+phif: -0.6
 phi_var: 0.004
 D: 1
 q0: 1
 
 # Simulation parameters
 dt: 0.001
-nsteps: 25000
+nsteps: 250
+drain: False
+drain_start: 0
+drain_stop: 1000
 
-# dimension: 2 for 2D grid, 3 for Gmsh2DIn3DSpace
+# dimension: 2 for 2D periodic grid, 3 for spherical surface
 dim: 2
 
 # 2D Grid inputs:
@@ -19,10 +23,9 @@ ny: 200
 dx: 0.784
 dy: 0.784
 
-# 3D input files
-mesh_file: "mesh.geo" # contains inputs for Gmsh2DIn3DSpace
+# 3D grid inputs
 
 # outputs
-log_file: "pfc.log"
-trajectory_file: "pfc.h5"
-trajectory_write_interval: 500 # in number of steps
+log_file: "pfc_nofipy.log"
+trajectory_file: "pfc_nofipy.h5"
+trajectory_write_interval: 5 # in number of steps

@@ -1,12 +1,7 @@
 import datetime
 import math
-from copy import deepcopy
 
 import numpy as np
-from fipy import (
-    CellVariable,
-    GaussianNoiseVariable,
-)
 from src.fileIO import FileIO
 from src.logging import Log
 from src.trajectory import TrajectoryWriter
@@ -22,45 +17,51 @@ class PFC_Sim(FileIO):
 
         self.log.debug("------ Mesh ------")
         if self.config["dim"] == 2:
-            mesh_content = self._generate_mesh_2D()
+            self._generate_mesh_2D()
         elif self.config["dim"] == 3:
-            mesh_content = self._generate_mesh_3D()
+            self._generate_mesh_3D()
         else:
             raise ValueError("Invalid dimension choice. Options: 2, 3")
-        self.log.debug(mesh_content)
+        self.log.debug(
+            f"Completed generating mesh in {self.config['dim']} dimensions.\n"
+        )
 
+        num_grid_points = len(self.phi_grid.ravel())
         dset_shape = (
             int(self.config["nsteps"] / self.config["trajectory_write_interval"]) + 1,
-            len(self.phi),
+            num_grid_points,
         )
-        self.traj_writer = TrajectoryWriter(self.config, time, dset_shape, mesh_content)
+        self.traj_writer = TrajectoryWriter(self.config, time, dset_shape)
 
         self.log.debug("------ Simulation details ------")
         self.log.debug(f"Number of expected output frames: {dset_shape[0]}")
-        self.log.debug(f"Number of cells: {len(self.phi)}")
+        self.log.debug(f"Number of cells: {num_grid_points}")
+        if self.config["drain"]:
+            self.drain_magnitude = (self.config["phif"] - self.config["phi0"]) / (
+                self.config["drain_stop"] - self.config["drain_start"]
+            )
+            self.log.debug(f"Draining field for first {self.drain_magnitude} steps.")
 
         self._generate_eq_motion()
 
     def _generate_mesh_2D(self):
-        from fipy import PeriodicGrid2D
-
         # just abbreviate to reduce verbosity
         dx = self.config["dx"]
         dy = self.config["dy"]
         nx = self.config["nx"]
         ny = self.config["ny"]
 
-        mesh = PeriodicGrid2D(
-            dx=dx,
-            dy=dy,
-            nx=nx,
-            ny=ny,
-        )
-        self.phi = self._initialize_field_values(mesh)
-
         # generate k-space field
-        self.phi_grid = np.reshape(
-            self.phi.value, shape=((self.config["nx"], self.config["ny"]))
+        self.phi_grid = np.array(
+            [
+                [
+                    np.random.normal(
+                        loc=self.config["phi0"], scale=math.sqrt(self.config["phi_var"])
+                    )
+                    for i in range(ny)
+                ]
+                for j in range(nx)
+            ]
         )
 
         # generate k space wavevectors
@@ -68,29 +69,9 @@ class PFC_Sim(FileIO):
         ky = 2 * np.pi * np.fft.fftfreq(ny, d=dy)  # shape (Ny,)
         self.KX, self.KY = np.meshgrid(kx, ky, indexing="ij")  # shape (Nx, Ny)
         self.K2 = self.KX**2 + self.KY**2
-        # self.dealias_mask = self.K2 < (1 / 2) * np.max(self.K2)
-
-        return f"PeriodicGrid2D(dx={self.config['dx']}, dy={self.config['dy']}, nx={self.config['nx']}, ny={self.config['ny']})\n"
 
     def _generate_mesh_3D(self):
         raise NotImplementedError()
-        from fipy import Gmsh2DIn3DSpace
-
-        mesh_content = self._return_file_contents_as_string(self.config["mesh_file"])
-        mesh = Gmsh2DIn3DSpace(self.config["mesh_file"]).extrude(
-            extrudeFunc=lambda r: 1.1 * r
-        )
-        self.phi = self._initialize_field_values(mesh)
-        return mesh_content
-
-    def _initialize_field_values(self, mesh):
-        phi = CellVariable(name=r"$\phi$", mesh=mesh)
-        phi.setValue(
-            GaussianNoiseVariable(
-                mesh=mesh, mean=self.config["phi0"], variance=self.config["phi_var"]
-            )
-        )
-        return phi
 
     def _generate_eq_motion(self):
         co = self.config  # avoid rewriting self.config a ton in equations
@@ -115,14 +96,18 @@ class PFC_Sim(FileIO):
         with np.errstate(divide="ignore", invalid="ignore"):
             self.eL_inv_m1 = np.where(
                 np.abs(c * co["dt"]) < 1e-10,
-                co["dt"],  # limit as L_hat → 0
-                (np.expm1(c * co["dt"])) / c,
+                (-K2) * co["D"] * co["alpha"] * co["dt"],  # limit as L_hat → 0
+                (-K2) * co["D"] * co["alpha"] * (np.expm1(c * co["dt"])) / c,
             )
         with np.errstate(divide="ignore", invalid="ignore"):
             self.eL_inv_m1_so = np.where(
                 np.abs(c * co["dt"]) < 1e-10,
-                co["dt"],  # limit as L_hat → 0
-                (np.expm1(c * co["dt"]) - (c * co["dt"])) / (co["dt"] * c**2),
+                (-K2) * conf["D"] * conf["alpha"] * co["dt"],  # limit as L_hat → 0
+                (-K2)
+                * conf["D"]
+                * conf["alpha"]
+                * (np.expm1(c * co["dt"]) - (c * co["dt"]))
+                / (co["dt"] * c**2),
             )
         self.log.debug(f"Max calculated wavevector from dx (pi/dx): {np.pi / co['dx']}")
         self.log.debug(f"Max 2D plane wavevector magnitude: {np.max(K2)}")
@@ -151,10 +136,10 @@ class PFC_Sim(FileIO):
 
     def etd2rk(self, phi, eL, eL_inv_m1, K2, conf):
         phi_hat = self._fft_phi(phi, conf)
-        F = (-K2) * conf["D"] * conf["alpha"] * self._fft_phi(phi**3, conf)
+        F = self._fft_phi(phi**3, conf)
         an = (eL * phi_hat) + (eL_inv_m1 * F)  # etd1
         an_r = self._ifft_phi_hat(an, conf)
-        Fnh = (-K2) * conf["D"] * conf["alpha"] * self._fft_phi(an_r**3, conf)
+        Fnh = self._fft_phi(an_r**3, conf)
         phi_hat_new = an + (self.eL_inv_m1_so * (Fnh - F))
         return self._ifft_phi_hat(phi_hat_new, conf)
 
@@ -162,19 +147,21 @@ class PFC_Sim(FileIO):
         self.log.debug("------ Simulation Progress ------")
         self.log.info("# step, avg phi, max phi, min phi, max phi hat")
         self.log.info(
-            f"0, {np.mean(self.phi.value)}, {np.max(self.phi.value)}, {np.min(self.phi.value)}"
+            f"0, {np.mean(self.phi_grid)}, {np.max(self.phi_grid)}, {np.min(self.phi_grid)}"
         )
         with self.traj_writer.traj_file:
-            self.traj_writer._write_data(0, self.phi)
+            self.traj_writer._write_data(0, self.phi_grid.ravel())
             for i in range(1, self.config["nsteps"] + 1):
                 self.phi_grid = self.etd2rk(
                     self.phi_grid, self.eL, self.eL_inv_m1, self.K2, self.config
                 )
                 if i % self.config["trajectory_write_interval"] == 0:
-                    self.phi.setValue(self.phi_grid.ravel())
                     self.traj_writer._write_data(
-                        int(i / self.config["trajectory_write_interval"]), self.phi
+                        int(i / self.config["trajectory_write_interval"]),
+                        self.phi_grid.ravel(),
                     )
                     self.log.info(
-                        f"{i}, {np.mean(self.phi.value)}, {np.max(self.phi.value)}, {np.min(self.phi.value)}"
+                        f"{i}, {np.mean(self.phi_grid)}, {np.max(self.phi_grid)}, {np.min(self.phi_grid)}"
                     )
+                if self.config["drain"] and i < self.config["drain_steps"]:
+                    self.phi_grid = np.add(self.phi_grid, self.drain_magnitude)

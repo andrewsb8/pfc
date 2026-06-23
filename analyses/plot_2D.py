@@ -7,10 +7,6 @@ import sys
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-from fipy import (
-    CellVariable,
-    PeriodicGrid2D,
-)
 
 infile = sys.argv[1]
 frame = int(sys.argv[2])
@@ -22,21 +18,14 @@ nx = params["nx"]
 ny = params["ny"]
 dx = params["dx"]
 dy = params["dy"]
-mesh = PeriodicGrid2D(dx=dx, dy=dy, nx=nx, ny=ny)
-phi = CellVariable(name=r"$\phi$", mesh=mesh)
-phi.setValue(center_values)
 
-phi_arr = np.array(phi.value).reshape((ny, nx))
-
-# build coordinates of cell centers for extent
-x_centers = np.array(mesh.cellCenters[0]).reshape((ny, nx))
-y_centers = np.array(mesh.cellCenters[1]).reshape((ny, nx))
+phi_arr = np.array(center_values).reshape((ny, nx))
 
 # infer domain bounds from centers and dx, dy
-x_min = x_centers.min() - dx / 2.0
-x_max = x_centers.max() + dx / 2.0
-y_min = y_centers.min() - dy / 2.0
-y_max = y_centers.max() + dy / 2.0
+x_min = 0 - dx / 2.0
+x_max = nx + dx / 2.0
+y_min = 0 - dy / 2.0
+y_max = ny + dy / 2.0
 
 fig, ax = plt.subplots(figsize=(12, 8))
 im = ax.imshow(
