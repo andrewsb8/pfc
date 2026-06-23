@@ -124,7 +124,7 @@ class PFC_Sim(FileIO):
         else:
             raise NotImplementedError()
 
-    def etd1(self, phi, eL, eL_inv_m1, K2, conf):
+    def etd1(self, phi, eL, eL_inv_m1, conf):
         phi_hat = self._fft_phi(phi, conf)
         F = self._fft_phi(phi**3, conf)
         phi_hat_new = (eL * phi_hat) + (eL_inv_m1 * F)
@@ -140,7 +140,7 @@ class PFC_Sim(FileIO):
             self.traj_writer._write_data(0, self.phi_grid.ravel())
             for i in range(1, self.config["nsteps"] + 1):
                 self.phi_grid = self.etd1(
-                    self.phi_grid, self.eL, self.eL_inv_m1, self.K2, self.config
+                    self.phi_grid, self.eL, self.eL_inv_m1, self.config
                 )
                 if i % self.config["trajectory_write_interval"] == 0:
                     self.traj_writer._write_data(
