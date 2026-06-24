@@ -1,6 +1,7 @@
 import datetime
 import math
 
+import healpy as hp
 import numpy as np
 from src.fileIO import FileIO
 from src.logging import Log
@@ -52,16 +53,10 @@ class PFC_Sim(FileIO):
         ny = self.config["ny"]
 
         # generate k-space field
-        self.phi_grid = np.array(
-            [
-                [
-                    np.random.normal(
-                        loc=self.config["phi0"], scale=math.sqrt(self.config["phi_var"])
-                    )
-                    for i in range(ny)
-                ]
-                for j in range(nx)
-            ]
+        self.phi_grid = np.random.normal(
+            loc=self.config["phi0"],
+            scale=math.sqrt(self.config["phi_var"]),
+            size=(ny, nx),
         )
 
         # generate k space wavevectors
@@ -71,7 +66,19 @@ class PFC_Sim(FileIO):
         self.K2 = self.KX**2 + self.KY**2
 
     def _generate_mesh_3D(self):
-        raise NotImplementedError()
+        import matplotlib.pyplot as plt
+
+        nside = 12
+        npix = hp.nside2npix(nside)
+
+        m = np.random.normal(
+            loc=self.config["phi0"], scale=math.sqrt(self.config["phi_var"]), size=npix
+        )
+        hp.mollview(m)
+        plt.show()
+        hp.cartview(m, rot=(0, 0))
+        plt.show()
+        exit()
 
     def _generate_eq_motion(self):
         co = self.config  # avoid rewriting self.config a ton in equations

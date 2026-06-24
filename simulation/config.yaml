@@ -9,7 +9,7 @@ q0: 1
 
 # Simulation parameters
 dt: 0.001
-nsteps: 250
+nsteps: 2500
 drain: False
 drain_start: 0
 drain_stop: 1000
@@ -26,6 +26,6 @@ dy: 0.784
 # 3D grid inputs
 
 # outputs
-log_file: "pfc_nofipy.log"
-trajectory_file: "pfc_nofipy.h5"
+log_file: "pfc.log"
+trajectory_file: "pfc.h5"
 trajectory_write_interval: 5 # in number of steps
