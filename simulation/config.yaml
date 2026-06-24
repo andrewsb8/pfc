@@ -9,10 +9,10 @@ q0: 1
 
 # Simulation parameters
 dt: 0.001
-nsteps: 250
-drain: False
-drain_start: 0
-drain_stop: 1000
+nsteps: 250000
+drain: True
+drain_start: 10000
+drain_stop: 20000
 
 # dimension: 2 for 2D periodic grid, 3 for spherical surface
 dim: 2
@@ -26,6 +26,6 @@ dy: 0.784
 # 3D grid inputs
 
 # outputs
-log_file: "pfc_nofipy.log"
-trajectory_file: "pfc_nofipy.h5"
-trajectory_write_interval: 5 # in number of steps
+log_file: "pfc.log"
+trajectory_file: "pfc.h5"
+trajectory_write_interval: 500 # in number of steps
