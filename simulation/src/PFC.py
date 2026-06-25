@@ -66,18 +66,16 @@ class PFC_Sim(FileIO):
         self.K2 = self.KX**2 + self.KY**2
 
     def _generate_mesh_3D(self):
-        import matplotlib.pyplot as plt
-
-        nside = 12
+        nside = self.config["nside"]
         npix = hp.nside2npix(nside)
 
-        m = np.random.normal(
+        self.phi_grid = np.random.normal(
             loc=self.config["phi0"], scale=math.sqrt(self.config["phi_var"]), size=npix
         )
-        hp.mollview(m)
-        plt.show()
-        hp.cartview(m, rot=(0, 0))
-        plt.show()
+
+        self.KX = hp.map2alm(self.phi_grid)
+        self.K2 = self.KX**2
+
         exit()
 
     def _generate_eq_motion(self):
@@ -159,5 +157,9 @@ class PFC_Sim(FileIO):
                     self.log.info(
                         f"{i}, {np.mean(self.phi_grid)}, {np.max(self.phi_grid)}, {np.min(self.phi_grid)}"
                     )
-                if self.config["drain"] and i < self.config["drain_steps"]:
+                if (
+                    self.config["drain"]
+                    and i >= self.config["drain_start"]
+                    and i <= self.config["drain_stop"]
+                ):
                     self.phi_grid = np.add(self.phi_grid, self.drain_magnitude)

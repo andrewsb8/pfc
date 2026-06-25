@@ -55,13 +55,15 @@ for i in range(starting_frame, len(data["trajectory"])):
         avg_rs.append(avg_r)
 
 if plot:
+    if params["drain"]:
+        lab = r"t$^{1/2}$"
+        scale = np.array(time) ** (1 / 2)
+    else:
+        lab = r"t$^{1/3}$"
+        scale = np.array(time) ** (1 / 3)
     fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-    ax.plot(np.log(time), np.log(avg_rs), label="<r>")
-    ax.plot(
-        np.log(time), np.log(np.array(time) ** (1 / 3)), label="t^(1/3)", linestyle="--"
-    )
-    ax.set_xscale("log")
-    ax.set_yscale("log")
+    ax.loglog(time, avg_rs, label="<r>")
+    ax.loglog(time, scale, label=lab, linestyle="--")
     ax.set_xlabel("t", fontsize=16)
     ax.set_ylabel("<r>", fontsize=16)
     ax.tick_params("both", labelsize=14)

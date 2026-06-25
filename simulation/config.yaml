@@ -24,6 +24,7 @@ dx: 0.784
 dy: 0.784
 
 # 3D grid inputs
+nside: 12 # number of pixels on sphere = 12*(nside**2)
 
 # outputs
 log_file: "pfc.log"
