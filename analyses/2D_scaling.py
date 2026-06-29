@@ -33,7 +33,7 @@ for i in range(starting_frame, len(data["trajectory"])):
     t = i * params["dt"] * params["trajectory_write_interval"]
     center_values = data["trajectory"][i]
     total_bubble_area = sum(
-        [dx * dy for i in range(len(center_values)) if center_values[i] > level]
+        [dx * dy for i in range(len(center_values)) if center_values[i] < level]
     )
     phi_arr = np.array(center_values).reshape((ny, nx))
     contours = measure.find_contours(phi_arr, level=level)
