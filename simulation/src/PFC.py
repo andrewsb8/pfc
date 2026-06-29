@@ -1,6 +1,7 @@
 import datetime
 import math
 
+import healpy as hp
 import numpy as np
 from src.fileIO import FileIO
 from src.logging import Log
@@ -54,16 +55,10 @@ class PFC_Sim(FileIO):
         ny = self.config["ny"]
 
         # generate k-space field
-        self.phi_grid = np.array(
-            [
-                [
-                    np.random.normal(
-                        loc=self.config["phi0"], scale=math.sqrt(self.config["phi_var"])
-                    )
-                    for i in range(ny)
-                ]
-                for j in range(nx)
-            ]
+        self.phi_grid = np.random.normal(
+            loc=self.config["phi0"],
+            scale=math.sqrt(self.config["phi_var"]),
+            size=(ny, nx),
         )
 
         # generate k space wavevectors
@@ -73,7 +68,17 @@ class PFC_Sim(FileIO):
         self.K2 = self.KX**2 + self.KY**2
 
     def _generate_mesh_3D(self):
-        raise NotImplementedError()
+        nside = self.config["nside"]
+        npix = hp.nside2npix(nside)
+
+        self.phi_grid = np.random.normal(
+            loc=self.config["phi0"], scale=math.sqrt(self.config["phi_var"]), size=npix
+        )
+
+        phi_hat = hp.map2alm(self.phi_grid)
+        self.lmax = hp.Alm.getlmax(len(phi_hat))
+        ells, ems = hp.Alm.getlm(self.lmax)
+        self.K2 = -ells * (ells + 1)
 
     def _generate_eq_motion(self):
         co = self.config  # avoid rewriting self.config a ton in equations
@@ -118,6 +123,8 @@ class PFC_Sim(FileIO):
         # inverse FFT to real space in 2D or 3D and recollapse
         if conf["dim"] == 2:
             return np.real(np.fft.ifft2(phi_hat))
+        if conf["dim"] == 3:
+            return hp.alm2map(phi_hat, nside=conf["nside"])
         else:
             raise NotImplementedError()
 
@@ -125,6 +132,8 @@ class PFC_Sim(FileIO):
         # FFT to real space in 2D or 3D and recollapse
         if conf["dim"] == 2:
             return np.fft.fft2(phi)
+        if conf["dim"] == 3:
+            return hp.map2alm(phi, lmax=self.lmax)
         else:
             raise NotImplementedError()
 
@@ -147,9 +156,14 @@ class PFC_Sim(FileIO):
                     self.phi_grid, self.eL, self.eL_inv_m1, self.config
                 )
                 if i % self.config["trajectory_write_interval"] == 0:
+                    if self.config["dim"] == 2:
+                        field = self.phi_grid.ravel()
+                    else:
+                        # 3D case is handled as 1D array so no need to change
+                        field = self.phi_grid
                     self.traj_writer._write_data(
                         int(i / self.config["trajectory_write_interval"]),
-                        self.phi_grid.ravel(),
+                        field,
                     )
                     self.log.info(
                         f"{i}, {np.mean(self.phi_grid)}, {np.max(self.phi_grid)}, {np.min(self.phi_grid)}"
