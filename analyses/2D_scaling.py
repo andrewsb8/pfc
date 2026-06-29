@@ -18,6 +18,10 @@ ny = params["ny"]
 dx = params["dx"]
 dy = params["dy"]
 total_area = nx * dx * ny * dy
+if params["drain"]:
+    level = params["phif"]
+else:
+    level = params["phi0"]
 
 if plot:
     time = []
@@ -29,14 +33,10 @@ for i in range(starting_frame, len(data["trajectory"])):
     t = i * params["dt"] * params["trajectory_write_interval"]
     center_values = data["trajectory"][i]
     total_bubble_area = sum(
-        [
-            dx * dy
-            for i in range(len(center_values))
-            if center_values[i] > params["phi0"]
-        ]
+        [dx * dy for i in range(len(center_values)) if center_values[i] > level]
     )
     phi_arr = np.array(center_values).reshape((ny, nx))
-    contours = measure.find_contours(phi_arr, level=params["phi0"])
+    contours = measure.find_contours(phi_arr, level=level)
     bubble_count = len(contours)
     avg_A = total_bubble_area / len(contours)
     avg_r = math.sqrt(avg_A / (4 * np.pi))
