@@ -9,10 +9,10 @@ q0: 1
 
 # Simulation parameters
 dt: 0.001
-nsteps: 2500
-drain: False
-drain_start: 0
-drain_stop: 1000
+nsteps: 250000
+drain: True
+drain_start: 10000
+drain_stop: 20000
 
 # dimension: 2 for 2D periodic grid, 3 for spherical surface
 dim: 3
@@ -29,4 +29,4 @@ nside: 12 # number of pixels on sphere = 12*(nside**2)
 # outputs
 log_file: "pfc.log"
 trajectory_file: "pfc.h5"
-trajectory_write_interval: 5 # in number of steps
+trajectory_write_interval: 500 # in number of steps

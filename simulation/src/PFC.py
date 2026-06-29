@@ -41,7 +41,9 @@ class PFC_Sim(FileIO):
             self.drain_magnitude = (self.config["phif"] - self.config["phi0"]) / (
                 self.config["drain_stop"] - self.config["drain_start"]
             )
-            self.log.debug(f"Draining field for first {self.drain_magnitude} steps.")
+            self.log.debug(
+                f"Draining field from step {self.config['drain_start']} to self.config['drain_stop']."
+            )
 
         self._generate_eq_motion()
 
