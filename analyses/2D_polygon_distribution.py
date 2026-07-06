@@ -27,26 +27,17 @@ else:
 
 phi_arr = np.array(center_values).reshape((ny, nx))
 contours = measure.find_contours(phi_arr, level=level)
-contour_groups = stitch_contours(contours, params)
-bubble_count = len(contours)
-
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 # Plot the original field
 ax.imshow(phi_arr, cmap="binary_r", origin="lower")
-centroids = []
-open_count = 0
 for contour in contours:
-    if not np.allclose(contour[0], contour[-1]):
-        open_count += 1
     ax.plot(contour[:, 1], contour[:, 0], linewidth=2, color="red")
-    # y and x seem flipped because coords based on typical 2D array with ij indexing
-    y_avg = np.mean(contour[:, 0])
-    x_avg = np.mean(contour[:, 1])
-    centroids.append([x_avg, y_avg])
-centroids = np.array(centroids)
-print(len(contours), open_count, len(centroids))
+
+contour_groups = stitch_contours(contours, params)
+bubble_count = len(contour_groups.contour_indices_grouped)
+centroids = contour_groups.calc_centroids()
+print(bubble_count, len(centroids))
 plt.scatter(centroids[:, 0], centroids[:, 1])
-plt.show()
 
 # voronoi
 # We must add a z=0 component to this array for freud

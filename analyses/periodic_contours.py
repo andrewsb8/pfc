@@ -17,19 +17,47 @@ class ContourGroups(object):
         self.contour_indices_grouped = []
 
     def calc_centroids(self):
-        # shift contours to make smooth curve (can shift to max dims like voronoi calc does)
-        # calc centroid
-        # return centroid coords modulo dimensions
-        pass
+        centroids = []
+        for group in self.contour_indices_grouped:
+            if len(group) == 1:
+                index = group[0]
+                centroids.append(self.calc_centroid(self.contours[index]))
+            else:
+                # align contours and return single array
+                # calculate centroid
+                # shift centroid via modulo with params
+                # append to centroids
+                aligned_contour = self.align_contours(group)
+                cent = self.calc_centroid(aligned_contour)
+                cent[0] = cent[0] % self.params["nx"]
+                cent[1] = cent[1] % self.params["ny"]
+                centroids.append(cent)
+        return np.array(centroids)
 
-    def calc_centroid(self, group):
-        pass
+    def calc_centroid(self, contour):
+        # y and x seem flipped because coords based on typical 2D array with ij indexing
+        y_avg = np.mean(contour[:, 0])
+        x_avg = np.mean(contour[:, 1])
+        return [x_avg, y_avg]
+
+    def align_contours(self, group):
+        # align arbitrarily on top right corner of grid to avoid negative numbers
+        c = []
+        for g in group:
+            contour = deepcopy(self.contours[g])
+            if np.max(contour[:, 0] < self.params["ny"] / 2):
+                contour[:, 0] += self.params["ny"] - 1
+            if np.max(contour[:, 1] < self.params["nx"] / 2):
+                contour[:, 1] += self.params["nx"] - 1
+            c.append(contour)
+        return np.vstack(c)
 
     def is_closed(self, group):
         # determined if group of contours forms closed shape
         pass
 
     def is_in_group(self, index):
+        # simple `index in object` does not work for nested lists...
         return index in [x for row in self.contour_indices_grouped for x in row]
 
 
@@ -43,6 +71,7 @@ def get_axis_shift(point, params):
     elif point[1] == params["nx"] - 1:
         return 1, -(params["nx"] - 1)
     else:
+        print(point)
         raise ValueError("Point without a zero")
 
 
@@ -81,6 +110,7 @@ def stitch_contours(contours, params):
         # each contour can only be part of 1 group
         if contour_groups.is_in_group(i):
             continue
+        print(contour_groups.contour_ends)
         # add closed group individually
         if np.allclose(
             contour_groups.contour_ends[i][0], contour_groups.contour_ends[i][1]
@@ -90,6 +120,4 @@ def stitch_contours(contours, params):
             contour_groups.contour_indices_grouped.append(
                 stitch_contour(contour_groups, i, params)
             )
-    print(len(contour_groups.contour_indices_grouped))
-    print(contour_groups.contour_indices_grouped)
     return contour_groups
