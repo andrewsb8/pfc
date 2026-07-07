@@ -38,6 +38,7 @@ bubble_count = len(contour_groups.contour_indices_grouped)
 centroids = contour_groups.calc_centroids()
 print(bubble_count, len(centroids))
 plt.scatter(centroids[:, 0], centroids[:, 1])
+plt.show()
 
 # voronoi
 # We must add a z=0 component to this array for freud

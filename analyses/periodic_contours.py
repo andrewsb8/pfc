@@ -22,11 +22,8 @@ class ContourGroups(object):
             if len(group) == 1:
                 index = group[0]
                 centroids.append(self.calc_centroid(self.contours[index]))
+                print(group, self.contours[index][0], self.contours[index][1])
             else:
-                # align contours and return single array
-                # calculate centroid
-                # shift centroid via modulo with params
-                # append to centroids
                 aligned_contour = self.align_contours(group)
                 cent = self.calc_centroid(aligned_contour)
                 cent[0] = cent[0] % self.params["nx"]
@@ -45,20 +42,28 @@ class ContourGroups(object):
         c = []
         for g in group:
             contour = deepcopy(self.contours[g])
-            if np.max(contour[:, 0] < self.params["ny"] / 2):
+            if np.max(contour[:, 0] < self.params["ny"] / 3):
                 contour[:, 0] += self.params["ny"] - 1
-            if np.max(contour[:, 1] < self.params["nx"] / 2):
+            if np.max(contour[:, 1] < self.params["nx"] / 3):
                 contour[:, 1] += self.params["nx"] - 1
             c.append(contour)
         return np.vstack(c)
 
-    def is_closed(self, group):
+    def is_closed_group(self, group):
         # determined if group of contours forms closed shape
         pass
 
     def is_in_group(self, index):
         # simple `index in object` does not work for nested lists...
         return index in [x for row in self.contour_indices_grouped for x in row]
+
+    def is_closed_index(self, index):
+        return np.allclose(
+            self.contour_ends[index][0],
+            self.contour_ends[index][1],
+            rtol=1e-3,
+            atol=1e-8,
+        )
 
 
 def get_axis_shift(point, params):
@@ -71,7 +76,6 @@ def get_axis_shift(point, params):
     elif point[1] == params["nx"] - 1:
         return 1, -(params["nx"] - 1)
     else:
-        print(point)
         raise ValueError("Point without a zero")
 
 
@@ -83,7 +87,11 @@ def stitch_contour(contour_groups, i, params):
     group = [i]
     for j in range(contour_groups.num_contours):
         if not contour_groups.is_in_group(j):
-            if np.allclose(active, contour_ends[j, 0], rtol=1e-1, atol=1e-1):
+            # explicitly stop from identifying closed contours
+            # from entering path
+            if np.allclose(
+                active, contour_ends[j, 0], rtol=1e-1, atol=1e-1
+            ) and not contour_groups.is_closed_index(j):
                 if j == i and len(group) > 1:
                     break
                 else:
@@ -92,7 +100,9 @@ def stitch_contour(contour_groups, i, params):
                     active[axis] += shift
                     group.append(j)
                     j = 0
-            elif np.allclose(active, contour_ends[j, 1], rtol=1e-1, atol=1e-1):
+            elif np.allclose(
+                active, contour_ends[j, 1], rtol=1e-1, atol=1e-1
+            ) and not contour_groups.is_closed_index(j):
                 if j == i and len(group) > 1:
                     break
                 else:
@@ -110,14 +120,12 @@ def stitch_contours(contours, params):
         # each contour can only be part of 1 group
         if contour_groups.is_in_group(i):
             continue
-        print(contour_groups.contour_ends)
         # add closed group individually
-        if np.allclose(
-            contour_groups.contour_ends[i][0], contour_groups.contour_ends[i][1]
-        ):
+        if contour_groups.is_closed_index(i):
             contour_groups.contour_indices_grouped.append([i])
         else:
             contour_groups.contour_indices_grouped.append(
                 stitch_contour(contour_groups, i, params)
             )
+    print(contour_groups.contour_indices_grouped)
     return contour_groups
