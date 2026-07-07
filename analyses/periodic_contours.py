@@ -42,9 +42,9 @@ class ContourGroups(object):
         c = []
         for g in group:
             contour = deepcopy(self.contours[g])
-            if np.max(contour[:, 0] < self.params["ny"] / 3):
+            if np.max(contour[:, 0] < self.params["ny"] / 2):
                 contour[:, 0] += self.params["ny"] - 1
-            if np.max(contour[:, 1] < self.params["nx"] / 3):
+            if np.max(contour[:, 1] < self.params["nx"] / 2):
                 contour[:, 1] += self.params["nx"] - 1
             c.append(contour)
         return np.vstack(c)
