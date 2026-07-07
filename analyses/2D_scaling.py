@@ -5,6 +5,7 @@ import sys
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
+from periodic_contours import stitch_contours
 from skimage import measure
 
 infile = sys.argv[1]
@@ -37,8 +38,9 @@ for i in range(starting_frame, len(data["trajectory"])):
     )
     phi_arr = np.array(center_values).reshape((ny, nx))
     contours = measure.find_contours(phi_arr, level=level)
-    bubble_count = len(contours)
-    avg_A = total_bubble_area / len(contours)
+    contour_groups = stitch_contours(contours, params)
+    bubble_count = len(contour_groups.contour_indices_grouped)
+    avg_A = total_bubble_area / bubble_count
     avg_r = math.sqrt(avg_A / (4 * np.pi))
     print(
         t,
