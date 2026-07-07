@@ -68,15 +68,37 @@ class PFC_Sim(FileIO):
         self.K2 = self.KX**2 + self.KY**2
 
     def _generate_mesh_3D(self):
+        # creating mesh in harmonic space. see:
+        # Notes: https://healpy.readthedocs.io/en/latest/generated/healpy.sphtfunc.alm2map.html
+        # Issue: https://github.com/healpy/healpy/issues/414
         nside = self.config["nside"]
         npix = hp.nside2npix(nside)
+        self.lmax = 3 * nside - 1
 
-        self.phi_grid = np.random.normal(
-            loc=self.config["phi0"], scale=math.sqrt(self.config["phi_var"]), size=npix
-        )
+        alm = np.zeros(hp.Alm.getsize(self.lmax), dtype=np.complex128)
 
-        phi_hat = hp.map2alm(self.phi_grid)
-        self.lmax = hp.Alm.getlmax(len(phi_hat))
+        # random modes for l > 0
+        for ell in range(1, self.lmax + 1):
+            for m in range(0, ell + 1):
+                idx = hp.Alm.getidx(self.lmax, ell, m)
+                alm[idx] = (np.random.normal() + 1j * np.random.normal()) * 1e-3
+
+        # set the mean through the l=0 mode
+        idx00 = hp.Alm.getidx(self.lmax, 0, 0)
+        alm[idx00] = self.config["phi0"] * np.sqrt(4 * np.pi)
+
+        # rescaling the random numbers for a given real space variance
+        phi_initial = hp.alm2map(alm, nside=nside, lmax=self.lmax, verbose=False)
+        std = np.std(phi_initial)
+        scale = np.sqrt(self.config["phi_var"] / std**2)
+        alm *= scale
+        alm[idx00] = self.config["phi0"] * np.sqrt(4 * np.pi)
+
+        self.phi_grid = hp.alm2map(alm, nside=nside, lmax=self.lmax, verbose=False)
+        # print(
+        #    np.mean(self.phi_grid), np.std(self.phi_grid) ** 2, npix, len(self.phi_grid)
+        # )
+
         ells, ems = hp.Alm.getlm(self.lmax)
         self.K2 = -ells * (ells + 1)
 
@@ -155,6 +177,7 @@ class PFC_Sim(FileIO):
                 self.phi_grid = self.etd1(
                     self.phi_grid, self.eL, self.eL_inv_m1, self.config
                 )
+                print(self.phi_grid[0])
                 if i % self.config["trajectory_write_interval"] == 0:
                     if self.config["dim"] == 2:
                         field = self.phi_grid.ravel()

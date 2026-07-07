@@ -10,7 +10,7 @@ q0: 1
 # Simulation parameters
 dt: 0.001
 nsteps: 250000
-drain: True
+drain: False
 drain_start: 10000
 drain_stop: 20000
 
@@ -24,7 +24,7 @@ dx: 0.784
 dy: 0.784
 
 # 3D grid inputs
-nside: 12 # number of pixels on sphere = 12*(nside**2)
+nside: 32 # number of pixels on sphere = 12*(nside**2)
 
 # outputs
 log_file: "pfc.log"
