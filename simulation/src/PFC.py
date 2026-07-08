@@ -88,16 +88,15 @@ class PFC_Sim(FileIO):
         alm[idx00] = self.config["phi0"] * np.sqrt(4 * np.pi)
 
         # rescaling the random numbers for a given real space variance
-        phi_initial = hp.alm2map(alm, nside=nside, lmax=self.lmax, verbose=False)
+        phi_initial = hp.alm2map(alm, nside=nside, lmax=self.lmax)
+        # alm2 = hp.map2alm(phi_initial, lmax=self.lmax)
+        # add log here to check accuracy of spectral field reconstruction?
         std = np.std(phi_initial)
         scale = np.sqrt(self.config["phi_var"] / std**2)
         alm *= scale
         alm[idx00] = self.config["phi0"] * np.sqrt(4 * np.pi)
 
-        self.phi_grid = hp.alm2map(alm, nside=nside, lmax=self.lmax, verbose=False)
-        # print(
-        #    np.mean(self.phi_grid), np.std(self.phi_grid) ** 2, npix, len(self.phi_grid)
-        # )
+        self.phi_grid = hp.alm2map(alm, nside=nside, lmax=self.lmax)
 
         ells, ems = hp.Alm.getlm(self.lmax)
         self.K2 = -ells * (ells + 1)
@@ -162,7 +161,17 @@ class PFC_Sim(FileIO):
     def etd1(self, phi, eL, eL_inv_m1, conf):
         phi_hat = self._fft_phi(phi, conf)
         F = self._fft_phi(phi**3, conf)
-        phi_hat_new = (eL * phi_hat) + (eL_inv_m1 * F)
+        phi_hat_new = eL * phi_hat + (eL_inv_m1 * F)
+        phi_new = self._ifft_phi_hat(phi_hat_new, conf)
+        print(
+            self.K2[0],
+            phi_hat[0],
+            np.mean(phi_hat[1:-2]),
+            phi_hat_new[0],
+            np.mean(phi_hat_new[1:-2]),
+            np.mean(phi),
+            np.mean(phi_new),
+        )
         return self._ifft_phi_hat(phi_hat_new, conf)
 
     def _simulate(self):
@@ -177,7 +186,6 @@ class PFC_Sim(FileIO):
                 self.phi_grid = self.etd1(
                     self.phi_grid, self.eL, self.eL_inv_m1, self.config
                 )
-                print(self.phi_grid[0])
                 if i % self.config["trajectory_write_interval"] == 0:
                     if self.config["dim"] == 2:
                         field = self.phi_grid.ravel()
