@@ -67,6 +67,7 @@ class ContourGroups(object):
 
 
 def get_axis_shift(point, params):
+    print(point)
     if point[0] == 0:
         return 0, params["ny"] - 1
     elif point[0] == params["ny"] - 1:
@@ -85,47 +86,56 @@ def stitch_contour(contour_groups, i, params):
     axis, shift = get_axis_shift(active, params)
     active[axis] += shift
     group = [i]
-    for j in range(contour_groups.num_contours):
-        if not contour_groups.is_in_group(j):
+    j = 0
+    while j < contour_groups.num_contours:
+        if j not in group and not contour_groups.is_in_group(j) and not contour_groups.is_closed_index(j):
+            if i == 0:
+                print(j, contour_groups.is_in_group(j))
+                print(group, j, active, contour_ends[j,:])
             # explicitly stop from identifying closed contours
             # from entering path
-            if np.allclose(
-                active, contour_ends[j, 0], rtol=1e-1, atol=1e-1
-            ) and not contour_groups.is_closed_index(j):
+            if np.allclose(active, contour_ends[j, 0], rtol=8e-2, atol=1e-8):
                 if j == i and len(group) > 1:
                     break
                 else:
                     active = deepcopy(contour_ends[j, 1])
                     axis, shift = get_axis_shift(active, params)
+                    print("horizontal", j, axis, shift)
                     active[axis] += shift
                     group.append(j)
                     j = 0
-            elif np.allclose(
-                active, contour_ends[j, 1], rtol=1e-1, atol=1e-1
-            ) and not contour_groups.is_closed_index(j):
+                    continue
+            elif np.allclose(active, contour_ends[j, 1], rtol=8e-2, atol=1e-8):
                 if j == i and len(group) > 1:
                     break
                 else:
                     active = deepcopy(contour_ends[j, 0])
                     axis, shift = get_axis_shift(active, params)
+                    print("vertical", j, axis, shift)
                     active[axis] += shift
                     group.append(j)
                     j = 0
+                    continue
+        j += 1
     return group
 
 
 def stitch_contours(contours, params):
     contour_groups = ContourGroups(contours, params)
+    # identify closed groups first so the stitching is more efficient
     for i in range(contour_groups.num_contours):
-        # each contour can only be part of 1 group
-        if contour_groups.is_in_group(i):
-            continue
         # add closed group individually
         if contour_groups.is_closed_index(i):
             contour_groups.contour_indices_grouped.append([i])
+
+
+    for j in range(contour_groups.num_contours):
+        # each contour can only be part of 1 group
+        if contour_groups.is_in_group(j):
+            continue
         else:
             contour_groups.contour_indices_grouped.append(
-                stitch_contour(contour_groups, i, params)
+                stitch_contour(contour_groups, j, params)
             )
     print(contour_groups.contour_indices_grouped)
     return contour_groups

@@ -71,3 +71,15 @@ if plot:
     ax.tick_params("both", labelsize=14)
     ax.legend(fontsize=14)
     plt.show()
+
+    fig2, ax2 = plt.subplots(1, 1, figsize=(8, 8))
+    phi_arr = np.array(data["trajectory"][-1]).reshape((ny, nx))
+    ax2.imshow(phi_arr, cmap="binary_r", origin="lower")
+    ax2.plot(contours[0][:, 1], contours[0][:, 0], linewidth=2, color="red")
+    ax2.plot(contours[3][:, 1], contours[3][:, 0], linewidth=2, color="blue")
+    ax2.plot(contours[19][:, 1], contours[19][:, 0], linewidth=2, color="green")
+    ax2.plot(contours[18][:, 1], contours[18][:, 0], linewidth=2, color="yellow")
+
+    ax2.plot(contours[12][:, 1], contours[12][:, 0], linewidth=2, color="purple")
+    ax2.plot(contours[13][:, 1], contours[13][:, 0], linewidth=2, color="purple")
+    plt.show()
