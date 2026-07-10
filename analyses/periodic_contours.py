@@ -22,10 +22,10 @@ class ContourGroups(object):
             if len(group) == 1:
                 index = group[0]
                 centroids.append(self.calc_centroid(self.contours[index]))
-                print(group, self.contours[index][0], self.contours[index][1])
             else:
                 aligned_contour = self.align_contours(group)
                 cent = self.calc_centroid(aligned_contour)
+                print(cent)
                 cent[0] = cent[0] % self.params["nx"]
                 cent[1] = cent[1] % self.params["ny"]
                 centroids.append(cent)

@@ -36,7 +36,6 @@ for contour in contours:
 contour_groups = stitch_contours(contours, params)
 bubble_count = len(contour_groups.contour_indices_grouped)
 centroids = contour_groups.calc_centroids()
-print(bubble_count, len(centroids))
 plt.scatter(centroids[:, 0], centroids[:, 1])
 plt.show()
 
