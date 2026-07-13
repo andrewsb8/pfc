@@ -80,7 +80,7 @@ def get_axis_shift(point, params):
 def compare_contour_slopes(active_index, candidate):
     pass
 
-def stitch_contour(contour_groups, i, params):
+def stitch_contour(contour_groups, open_contours, i, params):
     contour_ends = contour_groups.contour_ends
     active = deepcopy(contour_ends[i][0])
     axis, shift = get_axis_shift(active, params)
@@ -88,10 +88,9 @@ def stitch_contour(contour_groups, i, params):
     group = [i]
     j = 0
     found = False
-    while j < contour_groups.num_contours:
-        # explicitly stop from identifying closed contours from entering path
-        # some checks here are redundant since closed groups were parsed first
-        if j not in group and not contour_groups.is_in_group(j) and not contour_groups.is_closed_index(j):
+    while j < len(open_contours):
+        contour = open_contours[j]
+        if contour not in group and not contour_groups.is_in_group(contour):
             if np.allclose(active, contour_ends[j, 0], rtol=5e-2, atol=1e-8):
                 if j == i and len(group) > 1:
                     break
@@ -126,11 +125,7 @@ def stitch_contours(contours, params):
             open_contours.append(i)
 
     for j in range(len(open_contours)):
-        # each contour can only be part of 1 group
-        if contour_groups.is_in_group(j):
-            continue
-        else:
-            contour_groups.contour_indices_grouped.append(
-                stitch_contour(contour_groups, j, params)
-            )
+        contour_groups.contour_indices_grouped.append(
+            stitch_contour(contour_groups, open_contours, open_contours[j], params)
+        )
     return contour_groups
