@@ -1,131 +1,43 @@
-from copy import deepcopy
-
 import numpy as np
+from skimage import measure
 
-
-class ContourGroups(object):
-    def __init__(self, contours, params):
-        self.contours = contours
-        self.num_contours = len(contours)
-        self.contour_ends = np.array(
-            [
-                [self.contours[i][0], self.contours[i][-1]]
-                for i in range(self.num_contours)
-            ]
-        )
+class ContourStitcher(object):
+    def __init__(self, field, level, params):
+        self.contours = measure.find_contours(field, level=level)
+        self.num_contours = len(self.contours)
         self.params = params
-        self.contour_indices_grouped = []
+        self.stitched_contours = self.find_periodic_contours(field, level, params)
 
     def calc_centroids(self):
-        centroids = []
-        for group in self.contour_indices_grouped:
-            if len(group) == 1:
-                index = group[0]
-                centroids.append(self.calc_centroid(self.contours[index]))
-            else:
-                aligned_contour = self.align_contours(group)
-                cent = self.calc_centroid(aligned_contour)
-                cent[0] = cent[0] % self.params["nx"]
-                cent[1] = cent[1] % self.params["ny"]
-                centroids.append(cent)
-        return np.array(centroids)
+        return np.array([[np.mean(sc[:, 1]) % self.params['nx'], np.mean(sc[:, 0]) % self.params['ny']] for sc in self.stitched_contours])
 
-    def calc_centroid(self, contour):
-        # y and x seem flipped because coords based on typical 2D array with ij indexing
-        y_avg = np.mean(contour[:, 0])
-        x_avg = np.mean(contour[:, 1])
-        return [x_avg, y_avg]
-
-    def align_contours(self, group):
-        # align arbitrarily on top right corner of grid to avoid negative numbers
-        c = []
-        for g in group:
-            contour = deepcopy(self.contours[g])
-            if np.max(contour[:, 0] < self.params["ny"] / 2):
-                contour[:, 0] += self.params["ny"] - 1
-            if np.max(contour[:, 1] < self.params["nx"] / 2):
-                contour[:, 1] += self.params["nx"] - 1
-            c.append(contour)
-        return np.vstack(c)
-
-    def is_closed_group(self, group):
-        # determined if group of contours forms closed shape
-        pass
-
-    def is_in_group(self, index):
-        # simple `index in object` does not work for nested lists...
-        return index in [x for row in self.contour_indices_grouped for x in row]
-
-    def is_closed_index(self, index):
+    def is_closed(self, contour):
         return np.allclose(
-            self.contour_ends[index][0],
-            self.contour_ends[index][1],
+            contour[0],
+            contour[-1],
             rtol=1e-3,
             atol=1e-8,
         )
 
-
-def get_axis_shift(point, params):
-    if point[0] == 0:
-        return 0, params["ny"] - 1
-    elif point[0] == params["ny"] - 1:
-        return 0, -(params["ny"] - 1)
-    elif point[1] == 0:
-        return 1, params["nx"] - 1
-    elif point[1] == params["nx"] - 1:
-        return 1, -(params["nx"] - 1)
-    else:
-        raise ValueError("Point without a zero")
-
-def compare_contour_slopes(active_index, candidate):
-    pass
-
-def stitch_contour(contour_groups, open_contours, i, params):
-    contour_ends = contour_groups.contour_ends
-    active = deepcopy(contour_ends[i][0])
-    axis, shift = get_axis_shift(active, params)
-    active[axis] += shift
-    group = [i]
-    j = 0
-    found = False
-    while j < len(open_contours):
-        contour = open_contours[j]
-        if contour not in group and not contour_groups.is_in_group(contour):
-            if np.allclose(active, contour_ends[j, 0], rtol=5e-2, atol=1e-8):
-                if j == i and len(group) > 1:
-                    break
-                else:
-                    found = True
-                    active = deepcopy(contour_ends[j, -1])
-            elif np.allclose(active, contour_ends[j, -1], rtol=5e-2, atol=1e-8):
-                if j == i and len(group) > 1:
-                    break
-                else:
-                    found = True
-                    active = deepcopy(contour_ends[j, 0])
-        if found:
-            axis, shift = get_axis_shift(active, params)
-            active[axis] += shift
-            group.append(j)
-            j = -1
-            found = False
-        j += 1
-    return group
-
-
-def stitch_contours(contours, params):
-    contour_groups = ContourGroups(contours, params)
-    open_contours = []
-    # identify closed groups first so the stitching is more efficient
-    for i in range(contour_groups.num_contours):
-        # add closed group individually
-        if contour_groups.is_closed_index(i):
-            contour_groups.contour_indices_grouped.append([i])
-        else:
-            open_contours.append(i)
-
-    for j in range(len(open_contours)):
-        contour_groups.contour_indices_grouped.append(
-            stitch_contour(contour_groups, open_contours, open_contours[j], params)
-        )
-    return contour_groups
+    def find_periodic_contours(self, field, level, params):
+        tiled_field = np.tile(field, (2,2))
+        reduced_contours = measure.find_contours(tiled_field, level=level)
+        kept = []
+        for c in reduced_contours:
+            x_max = np.max(c[:,1])
+            x_min = np.min(c[:,1])
+            y_max = np.max(c[:,0])
+            y_min = np.min(c[:,0])
+            # if inside original field and closed, keep it
+            if x_min >= 0 and x_max <= params['nx'] and y_min >= 0 and y_max <= params['ny'] and self.is_closed(c):
+                kept.append(c)
+            # gets the corner
+            elif ((x_min < params['nx'] and x_max > params['nx']) and (y_min < params['ny'] and y_max > params['ny'])) and self.is_closed(c):
+                kept.append(c)
+            # only crosses horizontal
+            elif ((x_min < params['nx'] and x_max > params['nx']) and (y_min >= 0 and y_max < params['ny'])) and self.is_closed(c):
+                kept.append(c)
+            # only crosses vertical
+            elif ((x_min > 0 and x_max < params['nx']) and (y_min < params['ny'] and y_max > params['ny'])) and self.is_closed(c):
+                kept.append(c)
+        return kept

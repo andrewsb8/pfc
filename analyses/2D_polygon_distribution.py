@@ -5,8 +5,7 @@ import freud
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-from periodic_contours import stitch_contours
-from skimage import measure
+from periodic_contours import ContourStitcher
 
 infile = sys.argv[1]
 frame = int(sys.argv[2])
@@ -20,22 +19,18 @@ ny = params["ny"]
 dx = params["dx"]
 dy = params["dy"]
 total_area = nx * dx * ny * dy
-if params["drain"]:
-    level = params["phif"]
-else:
-    level = params["phi0"]
 
 phi_arr = np.array(center_values).reshape((ny, nx))
-contours = measure.find_contours(phi_arr, level=level)
+level = np.mean(phi_arr)
+c_obj = ContourStitcher(phi_arr, level, params)
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 # Plot the original field
 ax.imshow(phi_arr, cmap="binary_r", origin="lower")
-for contour in contours:
+for contour in c_obj.stitched_contours:
     ax.plot(contour[:, 1], contour[:, 0], linewidth=2, color="red")
 
-contour_groups = stitch_contours(contours, params)
-bubble_count = len(contour_groups.contour_indices_grouped)
-centroids = contour_groups.calc_centroids()
+bubble_count = len(c_obj.stitched_contours)
+centroids = c_obj.calc_centroids()
 plt.scatter(centroids[:, 0], centroids[:, 1])
 plt.show()
 

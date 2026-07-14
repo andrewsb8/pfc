@@ -5,8 +5,7 @@ import sys
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-from periodic_contours import stitch_contours
-from skimage import measure
+from periodic_contours import ContourStitcher
 
 infile = sys.argv[1]
 starting_frame = int(sys.argv[2])
@@ -19,10 +18,7 @@ ny = params["ny"]
 dx = params["dx"]
 dy = params["dy"]
 total_area = nx * dx * ny * dy
-if params["drain"]:
-    level = params["phif"]
-else:
-    level = params["phi0"]
+level = params["phi0"]
 
 if plot:
     time = []
@@ -33,13 +29,14 @@ if plot:
 for i in range(starting_frame, len(data["trajectory"])):
     t = i * params["dt"] * params["trajectory_write_interval"]
     center_values = data["trajectory"][i]
+    if params["drain"]: #recalculate if draining to keep contours aligned with field
+        level = np.mean(center_values)
     total_bubble_area = sum(
         [dx * dy for i in range(len(center_values)) if center_values[i] < level]
     )
     phi_arr = np.array(center_values).reshape((ny, nx))
-    contours = measure.find_contours(phi_arr, level=level)
-    contour_groups = stitch_contours(contours, params)
-    bubble_count = len(contour_groups.contour_indices_grouped)
+    c_obj = ContourStitcher(phi_arr, level, params)
+    bubble_count = len(c_obj.stitched_contours)
     avg_A = total_bubble_area / bubble_count
     avg_r = math.sqrt(avg_A / (4 * np.pi))
     print(
