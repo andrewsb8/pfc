@@ -1,7 +1,7 @@
 import datetime
 import math
 
-import healpy as hp
+import pyshtools as pysh
 import numpy as np
 from src.fileIO import FileIO
 from src.logging import Log
@@ -68,38 +68,29 @@ class PFC_Sim(FileIO):
         self.K2 = self.KX**2 + self.KY**2
 
     def _generate_mesh_3D(self):
-        # creating mesh in harmonic space. see:
-        # Notes: https://healpy.readthedocs.io/en/latest/generated/healpy.sphtfunc.alm2map.html
-        # Issue: https://github.com/healpy/healpy/issues/414
-        nside = self.config["nside"]
-        npix = hp.nside2npix(nside)
-        self.lmax = 3 * nside - 1
+        lmax = 64
 
-        alm = np.zeros(hp.Alm.getsize(self.lmax), dtype=np.complex128)
+        ls = np.arange(lmax + 1, dtype=float)
+        power = np.zeros_like(ls)
+        power[1:] = ls[1:] ** -2  # e.g. power-law spectrum
 
-        # random modes for l > 0
-        for ell in range(1, self.lmax + 1):
-            for m in range(0, ell + 1):
-                idx = hp.Alm.getidx(self.lmax, ell, m)
-                alm[idx] = (np.random.normal() + 1j * np.random.normal()) * 1e-3
+        coeffs = pysh.SHCoeffs.from_random(power)
+        # Set the mean through l=0, m=0
+        coeffs.set_coeffs(self.config["phi0"], 0, 0)
 
-        # set the mean through the l=0 mode
-        idx00 = hp.Alm.getidx(self.lmax, 0, 0)
-        alm[idx00] = self.config["phi0"] * np.sqrt(4 * np.pi)
+        self.phi_grid = coeffs.expand(grid='GLQ')
+        self.K2 = -ls * (ls + 1)
 
-        # rescaling the random numbers for a given real space variance
-        phi_initial = hp.alm2map(alm, nside=nside, lmax=self.lmax)
-        # alm2 = hp.map2alm(phi_initial, lmax=self.lmax)
-        # add log here to check accuracy of spectral field reconstruction?
-        std = np.std(phi_initial)
-        scale = np.sqrt(self.config["phi_var"] / std**2)
-        alm *= scale
-        alm[idx00] = self.config["phi0"] * np.sqrt(4 * np.pi)
+    def _calc_3D_mean(self, grid):
+        lon_mean = np.mean(self.phi_grid, axis=1)
+        mean_val = np.sum(grid.weights * lon_mean) / np.sum(grid.weights)
 
-        self.phi_grid = hp.alm2map(alm, nside=nside, lmax=self.lmax)
+        lon_mean_sq = np.mean(self.phi_grid**2, axis=1)
+        mean_sq = np.sum(grid.weights * lon_mean_sq) / np.sum(grid.weights)
+        var_val = mean_sq - mean_val**2
 
-        ells, ems = hp.Alm.getlm(self.lmax)
-        self.K2 = -ells * (ells + 1)
+        print("area-weighted mean:", mean_val)
+        print("area-weighted var:", var_val)
 
     def _generate_eq_motion(self):
         co = self.config  # avoid rewriting self.config a ton in equations
@@ -145,7 +136,7 @@ class PFC_Sim(FileIO):
         if conf["dim"] == 2:
             return np.real(np.fft.ifft2(phi_hat))
         if conf["dim"] == 3:
-            return hp.alm2map(phi_hat, nside=conf["nside"])
+            return phi_hat.expand(grid='GLQ')
         else:
             raise NotImplementedError()
 
@@ -154,7 +145,7 @@ class PFC_Sim(FileIO):
         if conf["dim"] == 2:
             return np.fft.fft2(phi)
         if conf["dim"] == 3:
-            return hp.map2alm(phi, lmax=self.lmax)
+            return phi.expand()
         else:
             raise NotImplementedError()
 
@@ -162,21 +153,12 @@ class PFC_Sim(FileIO):
         phi_hat = self._fft_phi(phi, conf)
         F = self._fft_phi(phi**3, conf)
         phi_hat_new = eL * phi_hat + (eL_inv_m1 * F)
-        phi_new = self._ifft_phi_hat(phi_hat_new, conf)
-        print(
-            self.K2[0],
-            phi_hat[0],
-            np.mean(phi_hat[1:-2]),
-            phi_hat_new[0],
-            np.mean(phi_hat_new[1:-2]),
-            np.mean(phi),
-            np.mean(phi_new),
-        )
+        # phi_new = self._ifft_phi_hat(phi_hat_new, conf)
         return self._ifft_phi_hat(phi_hat_new, conf)
 
     def _simulate(self):
         self.log.debug("------ Simulation Progress ------")
-        self.log.info("# step, avg phi, max phi, min phi, max phi hat")
+        self.log.info("# step, avg phi, max phi, min phi, max phi")
         self.log.info(
             f"0, {np.mean(self.phi_grid)}, {np.max(self.phi_grid)}, {np.min(self.phi_grid)}"
         )
