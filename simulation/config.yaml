@@ -9,8 +9,8 @@ q0: 1
 
 # Simulation parameters
 dt: 0.001
-nsteps: 500
-drain: False
+nsteps: 5
+drain: True
 drain_start: 10000
 drain_stop: 20000
 
