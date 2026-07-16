@@ -103,7 +103,7 @@ distribution = distribution.T
 fig, ax = plt.subplots(figsize=(10, 6))
 mesh = ax.pcolormesh(
     times, polygon_dist_axis, distribution,
-    cmap='inferno'
+    cmap='bone_r'
 )
 
 cbar = fig.colorbar(mesh, ax=ax)
