@@ -1,7 +1,6 @@
 import datetime
 import math
 
-import pyshtools as pysh
 import numpy as np
 from src.fileIO import FileIO
 from src.logging import Log
@@ -24,8 +23,7 @@ class PFC_Sim(FileIO):
             f"Completed generating mesh in {self.config['dim']} dimensions.\n"
         )
 
-        # break point for 3D, phi grid is not just an array in 3D
-        num_grid_points = len(self.strategy.phi_grid.ravel())
+        num_grid_points = self.strategy.calc_num_grid_points()
         dset_shape = (
             int(self.config["nsteps"] / self.config["trajectory_write_interval"]) + 1,
             num_grid_points,

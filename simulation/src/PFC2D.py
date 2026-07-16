@@ -40,3 +40,6 @@ class PFC2D(DimensionStrategy):
 
     def flatten_field(self):
         return self.phi_grid.ravel()
+
+    def calc_num_grid_points(self):
+        return len(self.phi_grid.ravel())

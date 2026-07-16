@@ -27,3 +27,7 @@ class DimensionStrategy(ABC):
     @abstractmethod
     def drain(self, dm):
         pass
+
+    @abstractmethod
+    def calc_num_grid_points(self):
+        pass

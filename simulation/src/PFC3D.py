@@ -7,9 +7,7 @@ class PFC3D(DimensionStrategy):
         super().__init__(sim)
 
     def generate_mesh(self):
-        lmax = 64
-
-        ls = np.arange(lmax + 1, dtype=float)
+        ls = np.arange(self.config["lmax"] + 1, dtype=float)
         power = np.zeros_like(ls)
         power[1:] = ls[1:] ** -2  # e.g. power-law spectrum
 
@@ -18,6 +16,8 @@ class PFC3D(DimensionStrategy):
         coeffs.set_coeffs(self.config["phi0"], 0, 0)
 
         self.phi_grid = coeffs.expand(grid='GLQ')
+        print(self.phi_grid.data)
+        exit()
         self.K2 = -ls * (ls + 1)
 
     def transform_to_real(self, field):
@@ -27,6 +27,7 @@ class PFC3D(DimensionStrategy):
         return field.expand()
 
     def calc_field_mean(self):
+        # not done
         lon_mean = np.mean(self.phi_grid, axis=1)
         mean_val = np.sum(grid.weights * lon_mean) / np.sum(grid.weights)
 
@@ -42,3 +43,6 @@ class PFC3D(DimensionStrategy):
 
     def drain(self, dm):
         pass
+
+    def calc_num_grid_points(self):
+        return self.phi_grid.nlat * self.phi_grid.nlon
