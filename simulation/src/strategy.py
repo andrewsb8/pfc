@@ -31,3 +31,7 @@ class DimensionStrategy(ABC):
     @abstractmethod
     def calc_num_grid_points(self):
         pass
+
+    @abstractmethod
+    def log_sim_details(self, log, co, c, eL, eL_inv_m1):
+        pass

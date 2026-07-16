@@ -43,3 +43,16 @@ class PFC2D(DimensionStrategy):
 
     def calc_num_grid_points(self):
         return len(self.phi_grid.ravel())
+
+    def log_sim_details(self, log, co, c, eL, eL_inv_m1):
+        K2 = self.K2
+        log.debug(f"Max calculated wavevector from dx (pi/dx): {np.pi / co['dx']}")
+        log.debug(f"Max 2D plane wavevector magnitude: {np.max(K2)}")
+        log.debug(f"Max value of linear operator: {np.max(c)}")
+        log.debug(
+            f"Max of exponentiation of linear operator * dt: {np.max(eL)}"
+        )
+        hat_max = np.unravel_index(eL.argmax(), eL.shape)
+        log.debug(
+            f"Wavevector at max of exponential of linear operator * dt: {K2[hat_max]}"
+        )

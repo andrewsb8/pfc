@@ -78,16 +78,8 @@ class PFC_Sim(FileIO):
                 (-K2) * co["D"] * co["alpha"] * co["dt"],  # limit as L_hat → 0
                 (-K2) * co["D"] * co["alpha"] * (np.expm1(c * co["dt"])) / c,
             )
-        self.log.debug(f"Max calculated wavevector from dx (pi/dx): {np.pi / co['dx']}")
-        self.log.debug(f"Max 2D plane wavevector magnitude: {np.max(K2)}")
-        self.log.debug(f"Max value of linear operator: {np.max(c)}")
-        self.log.debug(
-            f"Max of exponentiation of linear operator * dt: {np.max(self.eL)}"
-        )
-        hat_max = np.unravel_index(self.eL.argmax(), self.eL.shape)
-        self.log.debug(
-            f"Wavevector at max of exponential of linear operator * dt: {K2[hat_max]}"
-        )
+
+        self.strategy.log_sim_details(self.log, self.config, c, self.eL, self.eL_inv_m1)
 
     def etd1(self, phi, eL, eL_inv_m1, conf):
         phi_hat = self.strategy.transform_to_spectral(phi)
