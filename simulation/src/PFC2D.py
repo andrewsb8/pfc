@@ -56,3 +56,6 @@ class PFC2D(DimensionTemplate):
         log.debug(
             f"Wavevector at max of exponential of linear operator * dt: {K2[hat_max]}"
         )
+
+    def get_grid_shape(self):
+        return self.phi_grid.shape

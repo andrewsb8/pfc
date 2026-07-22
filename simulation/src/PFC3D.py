@@ -47,3 +47,6 @@ class PFC3D(DimensionTemplate):
 
     def log_sim_details(self, log, co, c, eL, eL_inv_m1):
         pass
+
+    def get_grid_shape(self):
+        return self.phi_grid.data.shape

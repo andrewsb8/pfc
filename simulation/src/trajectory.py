@@ -4,12 +4,13 @@ import h5py
 
 
 class TrajectoryWriter(object):
-    def __init__(self, config, time, dset_shape):
+    def __init__(self, config, time, dset_shape, grid_shape):
         self.traj_file = h5py.File(config["trajectory_file"], "w")
         self._create_dataset(dset_shape)
         self._store_attribute("time", str(time))
         self._store_attribute("parameters", json.dumps(config))
         self._store_attribute("steps_written", "0")
+        self._store_attribute("steps_written", str(grid_shape))
         self.steps_written = 0
 
     def _create_dataset(self, dset_shape):

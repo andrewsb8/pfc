@@ -27,3 +27,7 @@ class DimensionTemplate(ABC):
     @abstractmethod
     def drain(self, dm):
         pass
+
+    @abstractmethod
+    def get_grid_shape(self):
+        pass

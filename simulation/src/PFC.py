@@ -28,11 +28,13 @@ class PFC_Sim(FileIO):
             int(self.config["nsteps"] / self.config["trajectory_write_interval"]) + 1,
             num_grid_points,
         )
-        self.traj_writer = TrajectoryWriter(self.config, time, dset_shape)
+        grid_shape = self.dim_specific.get_grid_shape()
+        self.traj_writer = TrajectoryWriter(self.config, time, dset_shape, grid_shape)
 
         self.log.debug("------ Simulation details ------")
         self.log.debug(f"Number of expected output frames: {dset_shape[0]}")
         self.log.debug(f"Number of cells: {num_grid_points}")
+        self.log.debug(f"Grid shape: {grid_shape}")
         if self.config["drain"]:
             self.drain_magnitude = (self.config["phif"] - self.config["phi0"]) / (
                 self.config["drain_stop"] - self.config["drain_start"]
@@ -40,6 +42,7 @@ class PFC_Sim(FileIO):
             self.log.debug(
                 f"Draining field from step {self.config['drain_start']} to {self.config['drain_stop']}."
             )
+        self.log.debug("")
 
         self._generate_eq_motion()
 
