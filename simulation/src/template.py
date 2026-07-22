@@ -5,7 +5,7 @@ class DimensionTemplate(ABC):
         self.config = sim.config   # copy of PFC_Sim config
 
     @abstractmethod
-    def generate_mesh(self):
+    def generate_grid(self):
         pass
 
     @abstractmethod

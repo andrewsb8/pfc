@@ -6,7 +6,7 @@ class PFC2D(DimensionTemplate):
     def __init__(self, sim):
         super().__init__(sim)
 
-    def generate_mesh(self):
+    def generate_grid(self):
         # just abbreviate to reduce verbosity
         dx = self.config["dx"]
         dy = self.config["dy"]

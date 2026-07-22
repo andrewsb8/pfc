@@ -17,24 +17,24 @@ class PFC_Sim(FileIO):
         log_obj._log_args(self.log, self.config)
         self.dim_specific = self._set_dimension()
 
-        self.log.debug("------ Mesh ------")
-        self.dim_specific.generate_mesh()
+        self.log.debug("------ Grid ------")
+        self.dim_specific.generate_grid()
+        num_grid_points = self.dim_specific.calc_num_grid_points()
+        grid_shape = self.dim_specific.get_grid_shape()
+        self.log.debug(f"Number of cells: {num_grid_points}")
+        self.log.debug(f"Grid shape: {grid_shape}")
         self.log.debug(
-            f"Completed generating mesh in {self.config['dim']} dimensions.\n"
+            f"Completed generating grid in {self.config['dim']} dimensions.\n"
         )
 
-        num_grid_points = self.dim_specific.calc_num_grid_points()
         dset_shape = (
             int(self.config["nsteps"] / self.config["trajectory_write_interval"]) + 1,
             num_grid_points,
         )
-        grid_shape = self.dim_specific.get_grid_shape()
         self.traj_writer = TrajectoryWriter(self.config, time, dset_shape, grid_shape)
 
         self.log.debug("------ Simulation details ------")
         self.log.debug(f"Number of expected output frames: {dset_shape[0]}")
-        self.log.debug(f"Number of cells: {num_grid_points}")
-        self.log.debug(f"Grid shape: {grid_shape}")
         if self.config["drain"]:
             self.drain_magnitude = (self.config["phif"] - self.config["phi0"]) / (
                 self.config["drain_stop"] - self.config["drain_start"]
@@ -42,9 +42,9 @@ class PFC_Sim(FileIO):
             self.log.debug(
                 f"Draining field from step {self.config['drain_start']} to {self.config['drain_stop']}."
             )
-        self.log.debug("")
 
         self._generate_eq_motion()
+        self.log.debug("")
 
     def _set_dimension(self):
         if self.config["dim"] == 2:
@@ -84,7 +84,7 @@ class PFC_Sim(FileIO):
 
         self.dim_specific.log_sim_details(self.log, self.config, c, self.eL, self.eL_inv_m1)
 
-    def etd1(self, phi, eL, eL_inv_m1, conf):
+    def etd1(self, phi, eL, eL_inv_m1):
         phi_hat = self.dim_specific.transform_to_spectral(phi)
         F = self.dim_specific.transform_to_spectral(phi**3)
         phi_hat_new = eL * phi_hat + (eL_inv_m1 * F)
@@ -100,7 +100,7 @@ class PFC_Sim(FileIO):
             self.traj_writer._write_data(0, self.dim_specific.phi_grid.ravel())
             for i in range(1, self.config["nsteps"] + 1):
                 self.dim_specific.phi_grid = self.etd1(
-                    self.dim_specific.phi_grid, self.eL, self.eL_inv_m1, self.config
+                    self.dim_specific.phi_grid, self.eL, self.eL_inv_m1
                 )
                 if i % self.config["trajectory_write_interval"] == 0:
                     field = self.dim_specific.flatten_field()

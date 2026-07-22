@@ -6,7 +6,7 @@ class PFC3D(DimensionTemplate):
     def __init__(self, sim):
         super().__init__(sim)
 
-    def generate_mesh(self):
+    def generate_grid(self):
         ls = np.arange(self.config["lmax"] + 1, dtype=float)
         power = np.zeros_like(ls)
         power[1:] = ls[1:] ** -2  # e.g. power-law spectrum
