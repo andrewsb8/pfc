@@ -9,7 +9,7 @@ q0: 1
 
 # Simulation parameters
 dt: 0.001
-nsteps: 5
+nsteps: 250000
 drain: False
 drain_start: 10000
 drain_stop: 20000
@@ -24,9 +24,9 @@ dx: 0.784
 dy: 0.784
 
 # 3D grid inputs
-lmax: 1028
+lmax: 128
 
 # outputs
 log_file: "pfc.log"
 trajectory_file: "pfc.h5"
-trajectory_write_interval: 1 # in number of steps
+trajectory_write_interval: 10000 # in number of steps

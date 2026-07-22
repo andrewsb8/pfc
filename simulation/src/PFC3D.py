@@ -1,6 +1,7 @@
 from src.template import DimensionTemplate
 import pyshtools as pysh
 import numpy as np
+import copy
 
 class PFC3D(DimensionTemplate):
     def __init__(self, sim):
@@ -11,12 +12,15 @@ class PFC3D(DimensionTemplate):
         power = np.zeros_like(ls)
         power[1:] = ls[1:] ** -2  # e.g. power-law spectrum
 
+        # normalize so that Var(phi) = 1 for this shape, then scale
+        raw_var = np.sum((2 * ls[1:] + 1) / (4 * np.pi) * power[1:])
+        power[1:] *= self.config["phi_var"] / raw_var
+
         coeffs = pysh.SHCoeffs.from_random(power)
         # Set the mean through l=0, m=0
         coeffs.set_coeffs(self.config["phi0"], 0, 0)
 
         self.phi_grid = coeffs.expand(grid='GLQ')
-        #print(self.phi_grid.data)
         self.K2 = -ls * (ls + 1)
 
     def transform_to_real(self, field):
@@ -59,8 +63,9 @@ class PFC3D(DimensionTemplate):
         return self.phi_grid.data.shape
 
     def cube_field(self, field):
-        field.data = field.data**3
-        return field
+        new_field = copy.copy(field)
+        new_field.data = new_field.data**3
+        return new_field
 
     def etd1_update(self, eL, field, eL_inv_m1, field_cubed):
         field.coeffs = eL * field.coeffs + (eL_inv_m1 * field_cubed.coeffs)
