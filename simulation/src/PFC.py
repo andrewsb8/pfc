@@ -15,15 +15,15 @@ class PFC_Sim(FileIO):
         log_obj = Log()
         self.log = log_obj._create_log(self.config["log_file"], time)
         log_obj._log_args(self.log, self.config)
-        self.strategy = self._set_dimension()
+        self.dim_specific = self._set_dimension()
 
         self.log.debug("------ Mesh ------")
-        self.strategy.generate_mesh()
+        self.dim_specific.generate_mesh()
         self.log.debug(
             f"Completed generating mesh in {self.config['dim']} dimensions.\n"
         )
 
-        num_grid_points = self.strategy.calc_num_grid_points()
+        num_grid_points = self.dim_specific.calc_num_grid_points()
         dset_shape = (
             int(self.config["nsteps"] / self.config["trajectory_write_interval"]) + 1,
             num_grid_points,
@@ -52,7 +52,7 @@ class PFC_Sim(FileIO):
 
     def _generate_eq_motion(self):
         co = self.config  # avoid rewriting self.config a ton in equations
-        K2 = self.strategy.K2
+        K2 = self.dim_specific.K2
         k0 = math.sqrt(3.0 / (2 + math.sqrt(1 - (3 * co["b"]))))
         invk0sq = 1 / (k0**2)
         # linear operator in k space
@@ -79,38 +79,38 @@ class PFC_Sim(FileIO):
                 (-K2) * co["D"] * co["alpha"] * (np.expm1(c * co["dt"])) / c,
             )
 
-        self.strategy.log_sim_details(self.log, self.config, c, self.eL, self.eL_inv_m1)
+        self.dim_specific.log_sim_details(self.log, self.config, c, self.eL, self.eL_inv_m1)
 
     def etd1(self, phi, eL, eL_inv_m1, conf):
-        phi_hat = self.strategy.transform_to_spectral(phi)
-        F = self.strategy.transform_to_spectral(phi**3)
+        phi_hat = self.dim_specific.transform_to_spectral(phi)
+        F = self.dim_specific.transform_to_spectral(phi**3)
         phi_hat_new = eL * phi_hat + (eL_inv_m1 * F)
-        return self.strategy.transform_to_real(phi_hat_new)
+        return self.dim_specific.transform_to_real(phi_hat_new)
 
     def _simulate(self):
         self.log.debug("------ Simulation Progress ------")
         self.log.info("# step, avg phi, max phi, min phi, max phi")
         self.log.info(
-            f"0, {self.strategy.calc_field_mean()}, {np.max(self.strategy.phi_grid)}, {np.min(self.strategy.phi_grid)}"
+            f"0, {self.dim_specific.calc_field_mean()}, {np.max(self.dim_specific.phi_grid)}, {np.min(self.dim_specific.phi_grid)}"
         )
         with self.traj_writer.traj_file:
-            self.traj_writer._write_data(0, self.strategy.phi_grid.ravel())
+            self.traj_writer._write_data(0, self.dim_specific.phi_grid.ravel())
             for i in range(1, self.config["nsteps"] + 1):
-                self.strategy.phi_grid = self.etd1(
-                    self.strategy.phi_grid, self.eL, self.eL_inv_m1, self.config
+                self.dim_specific.phi_grid = self.etd1(
+                    self.dim_specific.phi_grid, self.eL, self.eL_inv_m1, self.config
                 )
                 if i % self.config["trajectory_write_interval"] == 0:
-                    field = self.strategy.flatten_field()
+                    field = self.dim_specific.flatten_field()
                     self.traj_writer._write_data(
                         int(i / self.config["trajectory_write_interval"]),
                         field,
                     )
                     self.log.info(
-                        f"{i}, {self.strategy.calc_field_mean()}, {np.max(self.strategy.phi_grid)}, {np.min(self.strategy.phi_grid)}"
+                        f"{i}, {self.dim_specific.calc_field_mean()}, {np.max(self.dim_specific.phi_grid)}, {np.min(self.dim_specific.phi_grid)}"
                     )
                 if (
                     self.config["drain"]
                     and i >= self.config["drain_start"]
                     and i <= self.config["drain_stop"]
                 ):
-                    self.strategy.phi_grid = self.strategy.drain(self.drain_magnitude)
+                    self.dim_specific.phi_grid = self.dim_specific.drain(self.drain_magnitude)

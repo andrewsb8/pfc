@@ -1,8 +1,8 @@
-from src.strategy import DimensionStrategy
+from src.template import DimensionTemplate
 import math
 import numpy as np
 
-class PFC2D(DimensionStrategy):
+class PFC2D(DimensionTemplate):
     def __init__(self, sim):
         super().__init__(sim)
 

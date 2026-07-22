@@ -1,8 +1,8 @@
-from src.strategy import DimensionStrategy
+from src.template import DimensionTemplate
 import pyshtools as pysh
 import numpy as np
 
-class PFC3D(DimensionStrategy):
+class PFC3D(DimensionTemplate):
     def __init__(self, sim):
         super().__init__(sim)
 
