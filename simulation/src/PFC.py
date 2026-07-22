@@ -85,31 +85,31 @@ class PFC_Sim(FileIO):
         self.dim_specific.log_sim_details(self.log, self.config, c, self.eL, self.eL_inv_m1)
 
     def etd1(self, phi, eL, eL_inv_m1):
+        phi3 = self.dim_specific.cube_field(phi)
         phi_hat = self.dim_specific.transform_to_spectral(phi)
-        F = self.dim_specific.transform_to_spectral(phi**3)
-        phi_hat_new = eL * phi_hat + (eL_inv_m1 * F)
+        F = self.dim_specific.transform_to_spectral(phi3)
+        phi_hat_new = self.dim_specific.etd1_update(eL, phi_hat, eL_inv_m1, F)
         return self.dim_specific.transform_to_real(phi_hat_new)
 
     def _simulate(self):
         self.log.debug("------ Simulation Progress ------")
         self.log.info("# step, avg phi, max phi, min phi, max phi")
         self.log.info(
-            f"0, {self.dim_specific.calc_field_mean()}, {np.max(self.dim_specific.phi_grid)}, {np.min(self.dim_specific.phi_grid)}"
+            f"0, {self.dim_specific.calc_field_mean()}, {self.dim_specific.calc_field_max()}, {self.dim_specific.calc_field_min()}"
         )
         with self.traj_writer.traj_file:
-            self.traj_writer._write_data(0, self.dim_specific.phi_grid.ravel())
+            self.traj_writer._write_data(0, self.dim_specific.flatten_field())
             for i in range(1, self.config["nsteps"] + 1):
                 self.dim_specific.phi_grid = self.etd1(
                     self.dim_specific.phi_grid, self.eL, self.eL_inv_m1
                 )
                 if i % self.config["trajectory_write_interval"] == 0:
-                    field = self.dim_specific.flatten_field()
                     self.traj_writer._write_data(
                         int(i / self.config["trajectory_write_interval"]),
-                        field,
+                        self.dim_specific.flatten_field(),
                     )
                     self.log.info(
-                        f"{i}, {self.dim_specific.calc_field_mean()}, {np.max(self.dim_specific.phi_grid)}, {np.min(self.dim_specific.phi_grid)}"
+                        f"{i}, {self.dim_specific.calc_field_mean()}, {self.dim_specific.calc_field_max()}, {self.dim_specific.calc_field_min()}"
                     )
                 if (
                     self.config["drain"]

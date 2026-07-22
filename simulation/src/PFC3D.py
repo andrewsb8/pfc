@@ -16,6 +16,7 @@ class PFC3D(DimensionTemplate):
         coeffs.set_coeffs(self.config["phi0"], 0, 0)
 
         self.phi_grid = coeffs.expand(grid='GLQ')
+        #print(self.phi_grid.data)
         self.K2 = -ls * (ls + 1)
 
     def transform_to_real(self, field):
@@ -36,6 +37,12 @@ class PFC3D(DimensionTemplate):
 
         return mean_val
 
+    def calc_field_max(self):
+        return np.max(self.phi_grid.data)
+
+    def calc_field_min(self):
+        return np.min(self.phi_grid.data)
+
     def flatten_field(self):
         pass
 
@@ -50,3 +57,11 @@ class PFC3D(DimensionTemplate):
 
     def get_grid_shape(self):
         return self.phi_grid.data.shape
+
+    def cube_field(self, field):
+        field.data = field.data**3
+        return field
+
+    def etd1_update(self, eL, field, eL_inv_m1, field_cubed):
+        field.coeffs = eL * field.coeffs + (eL_inv_m1 * field_cubed.coeffs)
+        return field

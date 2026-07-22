@@ -21,6 +21,14 @@ class DimensionTemplate(ABC):
         pass
 
     @abstractmethod
+    def calc_field_max(self):
+        pass
+
+    @abstractmethod
+    def calc_field_min(self):
+        pass
+
+    @abstractmethod
     def flatten_field(self):
         pass
 
@@ -30,4 +38,12 @@ class DimensionTemplate(ABC):
 
     @abstractmethod
     def get_grid_shape(self):
+        pass
+
+    @abstractmethod
+    def cube_field(self, field):
+        pass
+
+    @abstractmethod
+    def etd1_update(self, eL, field, eL_inv_m1, field_cubed):
         pass

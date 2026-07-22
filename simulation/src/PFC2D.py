@@ -38,6 +38,12 @@ class PFC2D(DimensionTemplate):
     def calc_field_mean(self):
         return np.mean(self.phi_grid)
 
+    def calc_field_max(self):
+        return np.max(self.phi_grid)
+
+    def calc_field_min(self):
+        return np.min(self.phi_grid)
+
     def flatten_field(self):
         return self.phi_grid.ravel()
 
@@ -59,3 +65,9 @@ class PFC2D(DimensionTemplate):
 
     def get_grid_shape(self):
         return self.phi_grid.shape
+
+    def cube_field(self, field):
+        return field**3
+
+    def etd1_update(self, eL, field, eL_inv_m1, field_cubed):
+        return eL * field + (eL_inv_m1 * field_cubed)

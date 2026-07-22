@@ -15,7 +15,7 @@ drain_start: 10000
 drain_stop: 20000
 
 # dimension: 2 for 2D periodic grid, 3 for spherical surface
-dim: 2
+dim: 3
 
 # 2D Grid inputs:
 nx: 200
@@ -24,7 +24,7 @@ dx: 0.784
 dy: 0.784
 
 # 3D grid inputs
-lmax: 64
+lmax: 1028
 
 # outputs
 log_file: "pfc.log"
