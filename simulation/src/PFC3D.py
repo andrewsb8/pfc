@@ -68,5 +68,6 @@ class PFC3D(DimensionTemplate):
         return new_field
 
     def etd1_update(self, eL, field, eL_inv_m1, field_cubed):
+        print(eL[0], field.coeffs[0][0][0])
         field.coeffs = eL * field.coeffs + (eL_inv_m1 * field_cubed.coeffs)
         return field
