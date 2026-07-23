@@ -8,8 +8,8 @@ class ContourStitcher(object):
         self.params = params
         self.stitched_contours = self.find_periodic_contours(field, level, params)
 
-    def calc_centroids(self):
-        return np.array([[np.mean(sc[:, 1]) % self.params['nx'], np.mean(sc[:, 0]) % self.params['ny']] for sc in self.stitched_contours])
+    def calc_centroids(self, threshold=-1):
+        return np.array([[np.mean(sc[:, 1]) % self.params['nx'], np.mean(sc[:, 0]) % self.params['ny']] for sc in self.stitched_contours if len(sc) > threshold])
 
     def is_closed(self, contour):
         return np.allclose(

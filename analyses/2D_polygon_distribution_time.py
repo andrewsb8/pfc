@@ -9,6 +9,7 @@ from periodic_contours import ContourStitcher
 
 infile = sys.argv[1]
 starting_frame = int(sys.argv[2])
+threshold = 50
 plot = True
 data = h5py.File(infile, "r")
 
@@ -23,13 +24,15 @@ times = []
 polygon_dist_values = [] # need to deal with the fact that each time step will produce different ranges
 distribution = [] # 2D list with counts of polygon vertices
 
-for i in range(starting_frame, len(data["trajectory"])):
+trajlen = len(data["trajectory"])
+for i in range(starting_frame, trajlen):
+    print(f"Step {i} of {trajlen}")
     times.append(i * params["dt"] * params["trajectory_write_interval"])
     phi_arr = np.array(data["trajectory"][i]).reshape((ny, nx))
     level = np.mean(phi_arr)
     c_obj = ContourStitcher(phi_arr, level, params)
     bubble_count = len(c_obj.stitched_contours)
-    centroids = c_obj.calc_centroids()
+    centroids = c_obj.calc_centroids(threshold=threshold)
 
     # voronoi
     # We must add a z=0 component to this array for freud
