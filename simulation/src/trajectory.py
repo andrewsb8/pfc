@@ -10,7 +10,8 @@ class TrajectoryWriter(object):
         self._store_attribute("time", str(time))
         self._store_attribute("parameters", json.dumps(config))
         self._store_attribute("steps_written", "0")
-        self._store_attribute("steps_written", str(grid_shape))
+        self._store_attribute("grid_shape_ax0", str(grid_shape[0]))
+        self._store_attribute("grid_shape_ax1", str(grid_shape[1]))
         self.steps_written = 0
 
     def _create_dataset(self, dset_shape):

@@ -48,7 +48,7 @@ class PFC3D(DimensionTemplate):
         return np.min(self.phi_grid.data)
 
     def flatten_field(self):
-        pass
+        return self.phi_grid.data.ravel()
 
     def drain(self, dm):
         pass
