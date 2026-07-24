@@ -85,8 +85,7 @@ class PFC_Sim(FileIO):
         self.dim_specific.log_sim_details(self.log, self.config, c, self.eL, self.eL_inv_m1)
 
     def etd1(self, phi, eL, eL_inv_m1):
-        phi3 = self.dim_specific.cube_field(phi)
-        phi_hat = self.dim_specific.transform_to_spectral(phi)
+        phi3 = self.dim_specific.cube_field(phi)        phi_hat = self.dim_specific.transform_to_spectral(phi)
         F = self.dim_specific.transform_to_spectral(phi3)
         phi_hat_new = self.dim_specific.etd1_update(eL, phi_hat, eL_inv_m1, F)
         return self.dim_specific.transform_to_real(phi_hat_new)
