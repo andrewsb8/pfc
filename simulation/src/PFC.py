@@ -56,6 +56,7 @@ class PFC_Sim(FileIO):
     def _generate_eq_motion(self):
         co = self.config  # avoid rewriting self.config a ton in equations
         K2 = self.dim_specific.K2
+        print("K2: ", K2)
         k0 = math.sqrt(3.0 / (2 + math.sqrt(1 - (3 * co["b"]))))
         invk0sq = 1 / (k0**2)
         # linear operator in k space
@@ -85,7 +86,8 @@ class PFC_Sim(FileIO):
         self.dim_specific.log_sim_details(self.log, self.config, c, self.eL, self.eL_inv_m1)
 
     def etd1(self, phi, eL, eL_inv_m1):
-        phi3 = self.dim_specific.cube_field(phi)        phi_hat = self.dim_specific.transform_to_spectral(phi)
+        phi3 = self.dim_specific.cube_field(phi)
+        phi_hat = self.dim_specific.transform_to_spectral(phi)
         F = self.dim_specific.transform_to_spectral(phi3)
         phi_hat_new = self.dim_specific.etd1_update(eL, phi_hat, eL_inv_m1, F)
         return self.dim_specific.transform_to_real(phi_hat_new)

@@ -63,10 +63,5 @@ class PFC3D(DimensionTemplate):
         return new_field
 
     def etd1_update(self, eL, field, eL_inv_m1, field_cubed):
-        pow_lm = field_cubed.coeffs[0]**2 + field_cubed.coeffs[1]**2
-        print("field_cubed max power at m=0:", pow_lm[:, 0].max())
-        print("field_cubed max power at m>0:", pow_lm[:, 1:].max())
-        lmax = len(eL)-1
-        for l in range(lmax + 1):
-            field.coeffs[:, l, :l+1] = eL[l] * field.coeffs[:, l, :l+1] + (eL_inv_m1[l] * field_cubed.coeffs[:, l, :l+1])
+        field.coeffs = eL[None, :, None] * field.coeffs + (eL_inv_m1[None, :, None] * field_cubed.coeffs)
         return field

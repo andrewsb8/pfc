@@ -18,8 +18,8 @@ drain_stop: 20000
 dim: 3
 
 # 2D Grid inputs:
-nx: 200
-ny: 200
+nx: 20
+ny: 20
 dx: 0.784
 dy: 0.784
 
