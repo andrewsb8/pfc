@@ -9,6 +9,10 @@ class DimensionTemplate(ABC):
         pass
 
     @abstractmethod
+    def load_grid(self):
+        pass
+
+    @abstractmethod
     def transform_to_real(self, field):
         pass
 

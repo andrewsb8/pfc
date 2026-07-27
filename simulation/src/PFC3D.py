@@ -18,6 +18,9 @@ class PFC3D(DimensionTemplate):
         ), grid="GLQ")
         self.K2 = -ls * (ls + 1)
 
+    def load_grid(self):
+        pass
+
     def transform_to_real(self, field):
         return field.expand(grid='GLQ')
 

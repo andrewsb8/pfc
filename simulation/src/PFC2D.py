@@ -26,6 +26,12 @@ class PFC2D(DimensionTemplate):
         self.KX, self.KY = np.meshgrid(kx, ky, indexing="ij")  # shape (Nx, Ny)
         self.K2 = self.KX**2 + self.KY**2
 
+    def load_grid(self):
+        pass
+
+    def generate_spectral_grid(self, nx, dx, ny, dy):
+
+
     def transform_to_real(self, field):
         return np.real(np.fft.ifft2(field))
 
