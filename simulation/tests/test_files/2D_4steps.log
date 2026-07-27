@@ -1,0 +1,46 @@
+Execution Time : 2026-07-27 12:21:24.243073
+Command line: python simulate.py
+
+------ Parameters ------
+alpha: 20
+b: -0.33333
+phi0: 0.25
+phif: -0.6
+phi_var: 0.004
+D: 1
+q0: 1
+dt: 0.001
+nsteps: 4
+drain: false
+drain_start: 10000
+drain_stop: 20000
+dim: 2
+nx: 20
+ny: 20
+dx: 0.784
+dy: 0.784
+lmax: 32
+log_file: pfc.log
+trajectory_file: pfc.h5
+trajectory_write_interval: 1
+
+------ Grid ------
+Number of cells: 400
+Grid shape: (20, 20)
+Completed generating grid in 2 dimensions.
+
+------ Simulation details ------
+Number of expected output frames: 5
+Max calculated wavevector from dx (pi/dx): 4.007133486721675
+Max 2D plane wavevector magnitude: 32.11423756081242
+Max value of linear operator: 34.017260356885124
+Max of exponentiation of linear operator * dt: 1.0346024641817704
+Wavevector at max of exponential of linear operator * dt: 2.0874254414528073
+
+------ Simulation Progress ------
+# step, avg phi, max phi, min phi, max phi
+0, 0.25137852457544285, 0.49672592698892737, 0.09678955519852003
+1, 0.25137852457544285, 0.3296982482642145, 0.16195796656030553
+2, 0.2513785245754429, 0.3218183463997202, 0.16103377409221628
+3, 0.25137852457544296, 0.31646839558935497, 0.16150273288030573
+4, 0.2513785245754431, 0.31394112027021104, 0.16177230579176427

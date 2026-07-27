@@ -9,11 +9,11 @@ q0: 1
 
 # Simulation parameters
 dt: 0.001
-nsteps: 4 # Total number of steps. If resuming trajectory, number of frames subtracted from this value
+nsteps: 4
 drain: False
 drain_start: 10000
 drain_stop: 20000
-resume: False
+resume: True
 
 # dimension: 2 for 2D periodic grid, 3 for spherical surface
 dim: 2
