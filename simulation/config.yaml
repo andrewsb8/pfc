@@ -15,7 +15,7 @@ drain_start: 10000
 drain_stop: 20000
 
 # dimension: 2 for 2D periodic grid, 3 for spherical surface
-dim: 3
+dim: 2
 
 # 2D Grid inputs:
 nx: 20
