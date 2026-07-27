@@ -16,7 +16,7 @@ class PFC3D(DimensionTemplate):
             scale=math.sqrt(self.config["phi_var"]),
             size=(lmax+1, 2*(lmax+1)),
         ), grid="GLQ")
-        self.K2 = -ls * (ls + 1)
+        self.K2 = ls * (ls + 1)
 
     def transform_to_real(self, field):
         return field.expand(grid='GLQ')
