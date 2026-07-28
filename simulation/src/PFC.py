@@ -56,7 +56,6 @@ class PFC_Sim(FileIO):
     def _generate_eq_motion(self):
         co = self.config  # avoid rewriting self.config a ton in equations
         K2 = self.dim_specific.K2
-        print("K2: ", K2)
         k0 = math.sqrt(3.0 / (2 + math.sqrt(1 - (3 * co["b"]))))
         invk0sq = 1 / (k0**2)
         # linear operator in k space
@@ -74,6 +73,7 @@ class PFC_Sim(FileIO):
 
         # Pre-compute ETD coefficients
         self.eL = np.exp(c * co["dt"])
+        print(self.eL)
         # Stable computation of (e^x - 1)/x via expm1 to avoid cancellation near x≈0
         # Include other coefficients of nonlinear term
         with np.errstate(divide="ignore", invalid="ignore"):

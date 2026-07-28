@@ -46,7 +46,8 @@ class PFC3D(DimensionTemplate):
         return self.phi_grid.data.ravel()
 
     def drain(self, dm):
-        pass
+        self.phi_grid.data = np.add(self.phi_grid.data, dm)
+        return self.phi_grid
 
     def calc_num_grid_points(self):
         return self.phi_grid.nlat * self.phi_grid.nlon
