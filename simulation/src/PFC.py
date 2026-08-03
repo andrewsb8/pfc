@@ -73,7 +73,6 @@ class PFC_Sim(FileIO):
 
         # Pre-compute ETD coefficients
         self.eL = np.exp(c * co["dt"])
-        print(self.eL)
         # Stable computation of (e^x - 1)/x via expm1 to avoid cancellation near x≈0
         # Include other coefficients of nonlinear term
         with np.errstate(divide="ignore", invalid="ignore"):
