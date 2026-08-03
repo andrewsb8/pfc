@@ -62,6 +62,13 @@ plt.show()
 polygon_vertex_counts = [len(cell) for cell in cells]
 bins = np.arange(1, max(polygon_vertex_counts) + 1, 1)
 hist, edges = np.histogram(polygon_vertex_counts, bins=bins)
+print("Histogram Counts, Histogram X Values")
+print(hist, edges)
+num_hex = hist[np.where(edges == 6)][0]
+num_poly = np.sum(hist)
+frac_hex = num_hex/num_poly
+print("# hex, # polygons, # fraction hexagons")
+print(f"{num_hex}, {num_poly}, {frac_hex}")
 plt.bar(edges[:-1], hist, edgecolor="black", align="center")
 plt.xlabel("Vertex Count", fontsize=16)
 plt.ylabel("Count", fontsize=16)
