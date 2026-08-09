@@ -23,6 +23,7 @@ total_area = nx * dx * ny * dy
 times = []
 polygon_dist_values = [] # need to deal with the fact that each time step will produce different ranges
 distribution = [] # 2D list with counts of polygon vertices
+hex_fracs = []
 
 trajlen = len(data["trajectory"])
 for i in range(starting_frame, trajlen):
@@ -47,6 +48,9 @@ for i in range(starting_frame, trajlen):
     polygon_vertex_counts = [len(cell) for cell in cells]
     bins = np.arange(min(polygon_vertex_counts)-1, max(polygon_vertex_counts) + 2, 1)
     hist, edges = np.histogram(polygon_vertex_counts, bins=bins, density=True)
+    num_hex = hist[np.where(edges == 6)][0]
+    num_poly = np.sum(hist)
+    hex_fracs.append(num_hex/num_poly)
     polygon_dist_values.append(edges[:-1])
     distribution.append(hist)
 
@@ -119,4 +123,12 @@ ax.tick_params("both", labelsize=14)
 
 plt.tight_layout()
 #plt.savefig('prob_dist_heatmap.png', dpi=150)
+plt.show()
+
+# hexagon fraction vs time
+fig, ax = plt.subplots(1, 1, figsize=(8, 8))
+ax.plot(times, hex_fracs, label="<r>")
+ax.set_xlabel('Time', fontsize=16)
+ax.set_ylabel('% Hexagons', fontsize=16)
+ax.tick_params("both", labelsize=14)
 plt.show()

@@ -9,7 +9,7 @@ q0: 1
 
 # Simulation parameters
 dt: 0.001
-nsteps: 1000
+nsteps: 500000
 drain: False
 drain_start: 10000
 drain_stop: 50000
@@ -29,4 +29,4 @@ lmax: 64
 # outputs
 log_file: "pfc.log"
 trajectory_file: "pfc.h5"
-trajectory_write_interval: 500 # in number of steps
+trajectory_write_interval: 200 # in number of steps
