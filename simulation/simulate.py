@@ -1,7 +1,9 @@
+import sys
 from src.PFC import PFC_Sim
 
 if __name__ == "__main__":
-    pfc = PFC_Sim("config.yaml")
+    config_fname = sys.argv[1]
+    pfc = PFC_Sim(config_fname)
     try:
         pfc._simulate()
     except Exception:

@@ -1,15 +1,15 @@
 # Variables and coefficients
-alpha: 1
+alpha: 20
 b: -0.33333
 phi0: 0.25
 phif: -0.7
 phi_var: 0.004
 D: 1
-q0: 1
+q0: 10
 
 # Simulation parameters
 dt: 0.001
-nsteps: 500000
+nsteps: 1000000
 drain: False
 drain_start: 10000
 drain_stop: 50000
@@ -29,4 +29,4 @@ lmax: 64
 # outputs
 log_file: "pfc.log"
 trajectory_file: "pfc.h5"
-trajectory_write_interval: 200 # in number of steps
+trajectory_write_interval: 3000 # in number of steps
