@@ -46,6 +46,7 @@ declare -a b=( -2 -1 ) #-1 -0.67 -0.33333333 0 )
 # need to generate loops such that N simultaneous jobs are executed at a time
 njobs=2
 job_count=0 # counter for jobs
+jobs_completed=0
 commands=()
 for q in ${q0[@]}
 do
@@ -62,6 +63,8 @@ do
                 if [ $job_count = $njobs ]
                 then
                     parallel --jobs ${job_count} ::: "${commands[@]}"
+                    jobs_completed=$((jobs_completed + job_count))
+                    echo ${jobs_completed}
                     job_count=0
                     commands=()
                     rm config_*
@@ -75,4 +78,7 @@ done
 if [ $job_count -gt 0 -a $job_count -lt $njobs ]
 then
     parallel --jobs ${job_count} ::: "${commands[@]}"
+    jobs_completed=$((jobs_completed + job_count))
+    echo ${jobs_completed}
+    rm config_*
 fi
