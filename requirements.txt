@@ -2,3 +2,4 @@ FiPy==4.0.2
 PyYAML==6.0.3
 h5py==3.16.0
 matplotlib==3.10.9
+freud-analysis==3.4.0

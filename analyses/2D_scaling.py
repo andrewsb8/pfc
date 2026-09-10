@@ -5,7 +5,7 @@ import sys
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-from skimage import measure
+from periodic_contours import ContourStitcher
 
 infile = sys.argv[1]
 starting_frame = int(sys.argv[2])
@@ -18,6 +18,7 @@ ny = params["ny"]
 dx = params["dx"]
 dy = params["dy"]
 total_area = nx * dx * ny * dy
+level = params["phi0"]
 
 if plot:
     time = []
@@ -28,17 +29,15 @@ if plot:
 for i in range(starting_frame, len(data["trajectory"])):
     t = i * params["dt"] * params["trajectory_write_interval"]
     center_values = data["trajectory"][i]
+    if params["drain"]: #recalculate if draining to keep contours aligned with field
+        level = np.mean(center_values)
     total_bubble_area = sum(
-        [
-            dx * dy
-            for i in range(len(center_values))
-            if center_values[i] > params["phi0"]
-        ]
+        [dx * dy for i in range(len(center_values)) if center_values[i] < level]
     )
     phi_arr = np.array(center_values).reshape((ny, nx))
-    contours = measure.find_contours(phi_arr, level=params["phi0"])
-    bubble_count = len(contours)
-    avg_A = total_bubble_area / len(contours)
+    c_obj = ContourStitcher(phi_arr, level, params)
+    bubble_count = len(c_obj.stitched_contours)
+    avg_A = total_bubble_area / bubble_count
     avg_r = math.sqrt(avg_A / (4 * np.pi))
     print(
         t,
@@ -55,15 +54,22 @@ for i in range(starting_frame, len(data["trajectory"])):
         avg_rs.append(avg_r)
 
 if plot:
+    if params["drain"]:
+        lab = r"t$^{1/2}$"
+        scale = np.array(time) ** (1 / 2)
+    else:
+        lab = r"t$^{1/3}$"
+        scale = np.array(time) ** (1 / 3)
     fig, ax = plt.subplots(1, 1, figsize=(8, 8))
-    ax.plot(np.log(time), np.log(avg_rs), label="<r>")
-    ax.plot(
-        np.log(time), np.log(np.array(time) ** (1 / 3)), label="t^(1/3)", linestyle="--"
-    )
-    ax.set_xscale("log")
-    ax.set_yscale("log")
+    ax.loglog(time, avg_rs, label="<r>")
+    ax.loglog(time, scale, label=lab, linestyle="--")
     ax.set_xlabel("t", fontsize=16)
     ax.set_ylabel("<r>", fontsize=16)
     ax.tick_params("both", labelsize=14)
     ax.legend(fontsize=14)
+    plt.show()
+
+    fig2, ax2 = plt.subplots(1, 1, figsize=(8, 8))
+    phi_arr = np.array(data["trajectory"][-1]).reshape((ny, nx))
+    ax2.imshow(phi_arr, cmap="binary_r", origin="lower")
     plt.show()
