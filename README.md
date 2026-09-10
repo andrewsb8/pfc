@@ -26,4 +26,4 @@ In a new venv/conda environment, run `$ pip install -r requirements.txt` to inst
 Other branches include alternate implementations or higher order solvers.
 
 - `real-space`: Implements PFC simulations using `FiPy` where the free energy is evaluated in real space as opposed to Fourier space. Includes instructions for running in HPC environment with slurm. Though it could utilize GPU-acceleration or massive parallelization, evaluating a real-space free energy with $\nabla^{8}$ was too computationally expensive.
-- `etd2rk`: Implements the same as the main branch but uses second order exponential time differentiation with Runge Kutta time stepping.
+- `ETD2RK`: Implements the same as the main branch but uses second order exponential time differentiation with Runge Kutta time stepping.
