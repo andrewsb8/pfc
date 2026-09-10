@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# A quick bash script which will run simulations for a range of coefficient
+# values in the free energy, write the associated .yaml config files, and
+# execute the single-threaded simulations in batches of user-defined sized
+# until all simulations are completed.
+
 simulation_path=/home/bandrews/Wormhole/projects/PFC/simulation/simulate.py
 
 # generate the config in the working directory
@@ -38,10 +43,10 @@ EOF
 # write_config 1 1 1 1 config_test.yaml
 
 # param arrays to sweep through
-declare -a q0=( 0.1 ) #1 10 )
-declare -a D=( 0.1 ) #1 2 )
-declare -a alpha=( 1 2 ) #2 5 10 20 )
-declare -a b=( -2 -1 ) #-1 -0.67 -0.33333333 0 )
+declare -a q0=( 0.1 1 10 )
+declare -a D=( 0.1 1 2 )
+declare -a alpha=( 1 2 2 5 10 20 )
+declare -a b=( -2 -1 -0.67 -0.33333333 0 )
 
 # need to generate loops such that N simultaneous jobs are executed at a time
 njobs=2
