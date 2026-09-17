@@ -1,5 +1,7 @@
-FiPy==4.0.2
+numpy==2.4.6
 PyYAML==6.0.3
 h5py==3.16.0
 matplotlib==3.10.9
 freud-analysis==3.4.0
+pyshtools==4.14.1
+scikit-image==0.26.0

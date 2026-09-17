@@ -50,7 +50,7 @@ declare -a b=( -2 -1 -0.67 -0.33333333 0 )
 
 # need to generate loops such that N simultaneous jobs are executed at a time
 njobs=2
-job_count=0 # counter for jobs
+job_count=0 # counter to determine if batch is complete (= njobs)
 jobs_completed=0
 commands=()
 for q in ${q0[@]}

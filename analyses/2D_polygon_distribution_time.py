@@ -37,22 +37,28 @@ for i in range(starting_frame, trajlen):
 
     # voronoi
     # We must add a z=0 component to this array for freud
-    points = np.hstack((centroids, np.zeros((centroids.shape[0], 1))))
-    # box should be square otherwise input to Voronoi won't work correctly
-    # not sure if below will work with stereographic projection
-    box = freud.box.Box(nx, ny, is2D=True)
-    voro = freud.locality.Voronoi()
-    cells = voro.compute((box, points)).polytopes
+    if centroids.shape[0] > 0:
+        points = np.hstack((centroids, np.zeros((centroids.shape[0], 1))))
+        # box should be square otherwise input to Voronoi won't work correctly
+        # not sure if below will work with stereographic projection
+        box = freud.box.Box(nx, ny, is2D=True)
+        voro = freud.locality.Voronoi()
+        cells = voro.compute((box, points)).polytopes
 
-    # calculate vertex historgram
-    polygon_vertex_counts = [len(cell) for cell in cells]
-    bins = np.arange(min(polygon_vertex_counts)-1, max(polygon_vertex_counts) + 2, 1)
-    hist, edges = np.histogram(polygon_vertex_counts, bins=bins, density=True)
-    num_hex = hist[np.where(edges == 6)][0]
-    num_poly = np.sum(hist)
-    hex_fracs.append(num_hex/num_poly)
-    polygon_dist_values.append(edges[:-1])
-    distribution.append(hist)
+        # calculate vertex historgram
+        polygon_vertex_counts = [len(cell) for cell in cells]
+        bins = np.arange(min(polygon_vertex_counts) - 1, max(polygon_vertex_counts) + 2, 1)
+        hist, edges = np.histogram(polygon_vertex_counts, bins=bins, density=True)
+        num_hex = hist[np.where(edges == 6)][0]
+        num_poly = np.sum(hist)
+        hex_fracs.append(num_hex/num_poly)
+        polygon_dist_values.append(edges[:-1])
+        distribution.append(hist)
+    else:
+        # no centroids breaks the scaling calculation
+        hex_fracs.append(0)
+        polygon_dist_values.append(np.array([0]))
+        distribution.append(np.array([0]))
 
 
 # need to deal with the fact that the len of arrays at each time step is not the same
@@ -120,10 +126,8 @@ cbar.ax.tick_params(labelsize=14)
 ax.set_xlabel('Time', fontsize=16)
 ax.set_ylabel('# Polygon Edges', fontsize=16)
 ax.tick_params("both", labelsize=14)
-
 plt.tight_layout()
 #plt.savefig('prob_dist_heatmap.png', dpi=150)
-plt.show()
 
 # hexagon fraction vs time
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
@@ -131,4 +135,6 @@ ax.plot(times, hex_fracs, label="<r>")
 ax.set_xlabel('Time', fontsize=16)
 ax.set_ylabel('% Hexagons', fontsize=16)
 ax.tick_params("both", labelsize=14)
+plt.tight_layout()
+#plt.savefig('hex_frac_v_time.png', dpi=150)
 plt.show()

@@ -1,5 +1,7 @@
 ## Phase Field Crystal Simulations of Foams
 
+![example](img/foams.png)
+
 This repository contains python scripts for performing and analyzing phase field crystal simulations in a 2D Grid or the 2D surface of a sphere. 
 
 - The free energy is taken from [Guttenberg, Goldenfeld, and Danzig](https://doi.org/10.1103/PhysRevE.81.065301) and designed to produce foams in 2D. The free energy form can be changed by modifying `_generate_eq_motion`. 
