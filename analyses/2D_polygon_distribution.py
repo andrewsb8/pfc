@@ -12,7 +12,7 @@ frame = int(sys.argv[2])
 # number of points in contour used as threshold for inclusion in voronoi.
 # Typical value of 75 works but recommend sensitivity analysis.
 # -1 includes all bubbles in analysis
-threshold = 50
+threshold = -1
 plot = True
 data = h5py.File(infile, "r")
 center_values = data["trajectory"][frame]
@@ -38,8 +38,13 @@ fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 #    ax.plot(contour[:, 1], contour[:, 0], linewidth=1, color="red")
 
 # voronoi
-# We must add a z=0 component to this array for freud
-points = np.hstack((centroids, np.zeros((centroids.shape[0], 1))))
+if centroids.shape[0] > 0:
+    # We must add a z=0 component to this array for freud
+    points = np.hstack((centroids, np.zeros((centroids.shape[0], 1))))
+else:
+    # no contours so no centroids, report and exit
+    print(f"{infile},{params['trajectory_write_interval']},{frame},0,0,0")
+    exit()
 # box should be square otherwise input to Voronoi won't work correctly
 # not sure if below will work with stereographic projection
 box = freud.box.Box(nx, ny, is2D=True)
@@ -71,23 +76,35 @@ rect = Rectangle(
     alpha=0.5,
 )
 ax.add_patch(rect)
+# determine if x/y limits need to be set by box or
+# by voronoi polyhedra extending through the box
+xmin, ymin = all_polys.min(axis=0)
+if xmin > 0:
+    xmin = 0
+if ymin > 0:
+    ymin = 0
+xmax, ymax = all_polys.max(axis=0)
+if xmax < nx:
+    xmax = nx
+if ymax < ny:
+    ymax = ny
 ax.set_xlim(xmin, xmax)
 ax.set_ylim(ymin, ymax)
 ax.set_axis_off()
-# plt.savefig(f"{infile}_{frame}_voro.png")
+#plt.savefig(f"{infile}_{frame}_voro.png")
 
 # calculate and plot vertex historgram
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 polygon_vertex_counts = [len(cell) for cell in cells]
-bins = np.arange(min(polygon_vertex_counts)-1, max(polygon_vertex_counts) + 1, 1)
+bins = np.arange(min(polygon_vertex_counts) - 1, max(polygon_vertex_counts) + 3, 1) # + 3 to avoid truncation and extend data to plot 1 bin past max
 hist, edges = np.histogram(polygon_vertex_counts, bins=bins)
-print("Histogram Counts, Histogram X Values")
-print(hist, edges)
-num_hex = hist[np.where(edges == 6)][0]
+if np.max(edges) <= 6 or np.min(edges) > 6:
+    num_hex = 0
+else:
+    num_hex = hist[np.where(edges == 6)][0]
 num_poly = np.sum(hist)
 frac_hex = num_hex/num_poly
-print("# hex, # polygons, # fraction hexagons")
-print(f"{num_hex}, {num_poly}, {frac_hex}")
+print(f"{infile},{params['trajectory_write_interval']},{frame},{num_hex},{num_poly},{frac_hex}")
 plt.bar(edges[:-1], hist, edgecolor="black", align="center")
 plt.xlabel("Vertex Count", fontsize=16)
 plt.ylabel("Count", fontsize=16)
@@ -95,7 +112,7 @@ plt.tick_params("both", labelsize=14)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.set_xlim()
-# plt.savefig(f"{infile}_{frame}_hist.png")
+#plt.savefig(f"{infile}_{frame}_hist.png")
 
 # delauney triangulation
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
@@ -109,5 +126,5 @@ ax = plt.gca()
 ax.add_collection(line_collection)
 ax.set_xlim(0, nx)
 ax.set_ylim(0, ny)
-# plt.savefig(f"{infile}_{frame}_delauney.png")
+#plt.savefig(f"{infile}_{frame}_delauney.png")
 plt.show()

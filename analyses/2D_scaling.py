@@ -29,7 +29,7 @@ if plot:
 for i in range(starting_frame, len(data["trajectory"])):
     t = i * params["dt"] * params["trajectory_write_interval"]
     center_values = data["trajectory"][i]
-    if params["drain"]: #recalculate if draining to keep contours aligned with field
+    if params["drain"]: # recalculate if draining to keep contours aligned with field
         level = np.mean(center_values)
     total_bubble_area = sum(
         [dx * dy for i in range(len(center_values)) if center_values[i] < level]
@@ -37,8 +37,12 @@ for i in range(starting_frame, len(data["trajectory"])):
     phi_arr = np.array(center_values).reshape((ny, nx))
     c_obj = ContourStitcher(phi_arr, level, params)
     bubble_count = len(c_obj.stitched_contours)
-    avg_A = total_bubble_area / bubble_count
-    avg_r = math.sqrt(avg_A / (4 * np.pi))
+    if bubble_count > 0:
+        avg_A = total_bubble_area / bubble_count
+        avg_r = math.sqrt(avg_A / (4 * np.pi))
+    else:
+        avg_A = 0
+        avg_r = 0
     print(
         t,
         total_area,
