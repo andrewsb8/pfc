@@ -97,7 +97,7 @@ ax.set_axis_off()
 fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 polygon_vertex_counts = [len(cell) for cell in cells]
 bins = np.arange(min(polygon_vertex_counts) - 1, max(polygon_vertex_counts) + 3, 1) # + 3 to avoid truncation and extend data to plot 1 bin past max
-hist, edges = np.histogram(polygon_vertex_counts, bins=bins)
+hist, edges = np.histogram(polygon_vertex_counts, bins=bins, density=True)
 if np.max(edges) <= 6 or np.min(edges) > 6:
     num_hex = 0
 else:
