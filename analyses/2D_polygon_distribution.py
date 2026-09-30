@@ -105,13 +105,18 @@ else:
 num_poly = np.sum(hist)
 frac_hex = num_hex/num_poly
 print(f"{infile},{params['trajectory_write_interval']},{frame},{num_hex},{num_poly},{frac_hex}")
-plt.bar(edges[:-1], hist, edgecolor="black", align="center")
-plt.xlabel("Vertex Count", fontsize=18)
-plt.ylabel("Count", fontsize=18)
-plt.tick_params("both", labelsize=16)
+plt.bar(edges[:-1], hist, edgecolor="black", align="center", zorder=2)
+plt.xlabel("Vertex Count", fontsize=30)
+plt.ylabel("Count", fontsize=30)
+plt.tick_params("both", labelsize=26)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
-ax.set_xlim()
+plt.xticks(np.arange(bins[0], bins[-1], 2))
+plt.yticks(np.arange(0, 0.56, 0.1))
+plt.yticks(np.arange(0, 0.56, 0.05), minor=True)
+ax.grid(which='both', axis='y', color='gray', linestyle='--', linewidth=0.8, alpha=0.75, zorder=1)
+ax.set_ylim(0, 0.55) # all samples will be less than 0.6 max, so easy to compare between samples
+plt.tight_layout()
 #plt.savefig(f"{infile}_{frame}_hist.png")
 
 # delauney triangulation
